@@ -2,7 +2,7 @@
 
 This repository provides a comprehensive Black-Scholes options analysis platform that combines theoretical pricing models with real-time market data. The application helps traders identify mispriced options, analyze risk through Greeks, and build complex options strategies with interactive visualizations.
 
-**Live Demo:** https://your-app-url.streamlit.app/
+**Live Demo:** [(https://blackscholestrading.streamlit.app/)]
 
 ## Features:
 
