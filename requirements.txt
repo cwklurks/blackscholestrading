@@ -6,3 +6,4 @@ plotly
 yfinance
 matplotlib
 seaborn 
+pytest

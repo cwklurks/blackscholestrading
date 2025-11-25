@@ -165,12 +165,6 @@ Simulations use geometric Brownian motion:
 streamlit run app.py --server.port 8501
 ```
 
-### Streamlit Cloud
-1. Fork this repository
-2. Connect to Streamlit Cloud
-3. Deploy with one click
-4. Share your live app URL
-
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -179,9 +173,6 @@ streamlit run app.py --server.port 8501
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🎯 Future Enhancements
 
@@ -194,14 +185,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [ ] Export functionality for reports and data
 - [ ] Mobile app version
 - [ ] API integration for institutional data feeds
-
-## 📞 Support
-
-For questions, suggestions, or issues:
-- Open an issue on GitHub
-- Email: [your-email@example.com]
-- LinkedIn: [Your LinkedIn Profile]
-
----
-
-**Built with ❤️ for the options trading and financial analysis community** 
