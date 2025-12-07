@@ -38,6 +38,13 @@ st.set_page_config(
 # Custom CSS for minor tweaks that Streamlit config can't handle
 st.markdown("""
 <style>
+    /* Import Inter font */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
+
     /* Subtle card styling */
     .metric-card {
         background-color: #252526;
@@ -74,6 +81,24 @@ st.markdown("""
 # -----------------------------------------------------------------------------
 # Data Fetching
 # -----------------------------------------------------------------------------
+def get_icon(name, size=20, color="currentColor", mode="html"):
+    if mode == "url":
+        # Use a specific color for the CDN URL (default to white for dark theme)
+        url_color = "white" if color == "currentColor" else color.replace("#", "%23")
+        return f"![{name}](https://api.iconify.design/lucide/{name}.svg?color={url_color}&height={size})"
+
+    # Lucide Icons (v0.344.0)
+    icons = {
+        "activity": '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>',
+        "file-text": '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line>',
+        "calculator": '<rect width="16" height="20" x="4" y="2" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="14"></line><line x1="16" y1="18" x2="16" y2="18"></line><line x1="12" y1="14" x2="12" y2="14"></line><line x1="12" y1="18" x2="12" y2="18"></line><line x1="8" y1="14" x2="8" y2="14"></line><line x1="8" y1="18" x2="8" y2="18"></line>',
+        "database": '<ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>',
+        "wifi": '<path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line>'
+    }
+    
+    svg_content = icons.get(name, "")
+    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">{svg_content}</svg>'
+
 @st.cache_data(show_spinner=False)
 def fetch_stock_data(ticker, period="1y"):
     try:
@@ -156,16 +181,36 @@ with st.sidebar:
     st.title("Settings")
     
     # 1. Market Data Configuration
-    st.markdown("### Market Data")
-    use_market_data = st.checkbox("Connect to Market Data", value=False, help="Pull real-time quotes via Yahoo Finance.")
+    st.markdown(f"### {get_icon('activity')} Market Data", unsafe_allow_html=True)
+    use_market_data = st.toggle("Live Connection", value=False, help="Pull real-time quotes via Yahoo Finance.")
+    
+    if use_market_data:
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #1a472a 0%, #2d5a3d 100%); 
+                    border-radius: 8px; padding: 12px; margin: 8px 0;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                {get_icon("wifi", color="#4ade80")}
+                <span style="color: #e0e0e0; font-weight: 500;">Connected to Live Data</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style="background: #3e3e42; border-radius: 8px; padding: 12px; margin: 8px 0;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="color: #888;">●</span>
+                <span style="color: #888;">Disconnected - Manual Mode</span>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
     
     col_tick, col_ref = st.columns([0.7, 0.3])
     with col_tick:
-        ticker = st.text_input("Ticker", value="AAPL" if use_market_data else "BTC-USD", placeholder="AAPL")
+        ticker = st.text_input("Ticker", value="AAPL" if use_market_data else "BTC-USD", placeholder="AAPL", disabled=not use_market_data)
     with col_ref:
         st.write("") # Spacer
         st.write("")
-        if st.button("↻"):
+        if st.button("↻", disabled=not use_market_data):
             fetch_stock_data.clear()
             fetch_options_chain.clear()
             st.session_state.last_refresh = datetime.utcnow()
@@ -181,10 +226,12 @@ with st.sidebar:
             current_price = float(hist['Close'].iloc[-1])
             hist_vol = calculate_historical_volatility(hist['Close']) or 0.2
             st.caption(f"Price: ${current_price:.2f} | HV: {hist_vol:.1%}")
+            if fetched_at:
+                st.caption(f"Last updated: {fetched_at.strftime('%H:%M:%S')} UTC")
         else:
             st.warning("No data found.")
 
-    with st.expander("Data Overrides", expanded=not use_market_data):
+    with st.expander(f"{get_icon('database', mode='url')} Data Inputs", expanded=not use_market_data):
         price_upload = st.file_uploader("Upload History (CSV)", type=["csv"])
         uploaded_series = parse_uploaded_prices(price_upload)
         
@@ -203,48 +250,47 @@ with st.sidebar:
         borrow_cost = st.number_input("Borrow Cost (%)", value=0.0, step=0.25) / 100
 
     # 2. Option Parameters
-    st.markdown("### Option Contract")
-    
-    # Handle selected option from chain
-    if st.session_state.selected_option:
-        opt = st.session_state.selected_option
-        st.info(f"Analying: {opt['option_type']} ${opt['strike']} (Exp: {opt['expiration']})")
-        if st.button("Clear Selection"):
-            st.session_state.selected_option = None
-            st.rerun()
-        
-        strike_default = opt['strike']
-        vol_default = opt['implied_vol']
-        selected_exp = opt['expiration']
-        if hasattr(selected_exp, 'date'):
-            exp_default = selected_exp.date()
+    with st.expander(f"{get_icon('file-text', mode='url')} Option Contract", expanded=True):
+        # Handle selected option from chain
+        if st.session_state.selected_option:
+            opt = st.session_state.selected_option
+            st.info(f"Analying: {opt['option_type']} ${opt['strike']} (Exp: {opt['expiration']})")
+            if st.button("Clear Selection"):
+                st.session_state.selected_option = None
+                st.rerun()
+            
+            strike_default = opt['strike']
+            vol_default = opt['implied_vol']
+            selected_exp = opt['expiration']
+            if hasattr(selected_exp, 'date'):
+                exp_default = selected_exp.date()
+            else:
+                exp_default = datetime.now().date() + timedelta(days=30)
         else:
+            strike_default = current_price
+            vol_default = hist_vol
             exp_default = datetime.now().date() + timedelta(days=30)
-    else:
-        strike_default = current_price
-        vol_default = hist_vol
-        exp_default = datetime.now().date() + timedelta(days=30)
 
-    strike = st.number_input("Strike Price", value=float(strike_default), step=1.0)
-    expiry_date = st.date_input("Expiration", value=exp_default, min_value=datetime.now().date())
-    
-    days_to_expiry = max((expiry_date - datetime.now().date()).days, 0)
-    time_to_maturity = max(days_to_expiry / 365.0, 1e-6)
-    st.caption(f"Time to Expiry: {days_to_expiry} days ({time_to_maturity:.3f}y)")
+        strike = st.number_input("Strike Price", value=float(strike_default), step=1.0)
+        expiry_date = st.date_input("Expiration", value=exp_default, min_value=datetime.now().date())
+        
+        days_to_expiry = max((expiry_date - datetime.now().date()).days, 0)
+        time_to_maturity = max(days_to_expiry / 365.0, 1e-6)
+        st.caption(f"Time to Expiry: {days_to_expiry} days ({time_to_maturity:.3f}y)")
 
-    volatility = st.slider("Implied Volatility (%)", min_value=1.0, max_value=200.0, value=vol_default * 100, step=0.5) / 100
+        volatility = st.slider("Implied Volatility (%)", min_value=1.0, max_value=200.0, value=vol_default * 100, step=0.5) / 100
     
     # 3. Model Configuration
-    st.markdown("### Pricing Model")
-    pricing_model = st.selectbox("Model", ["Black-Scholes", "Binomial (American)", "Heston MC", "GARCH MC", "Bates Jump-Diffusion"])
-    
-    # Model specific params
-    binomial_steps = 180
-    mc_paths = 4000
-    mc_steps = 120
-    
-    if pricing_model != "Black-Scholes":
-        with st.expander("Advanced Model Params"):
+    with st.expander(f"{get_icon('calculator', mode='url')} Pricing Model", expanded=False):
+        pricing_model = st.selectbox("Model", ["Black-Scholes", "Binomial (American)", "Heston MC", "GARCH MC", "Bates Jump-Diffusion"])
+        
+        # Model specific params
+        binomial_steps = 180
+        mc_paths = 4000
+        mc_steps = 120
+        
+        if pricing_model != "Black-Scholes":
+            st.markdown("#### Advanced Model Params")
             if pricing_model == "Binomial (American)":
                 binomial_steps = st.slider("Steps", 50, 500, 180)
             else:

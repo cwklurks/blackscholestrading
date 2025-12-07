@@ -246,7 +246,11 @@ def backtest_option_strategy(
     entry_option_price = None
 
     for idx, spot in prices.items():
-        days_to_expiry = max((expiry_dt - pd.to_datetime(idx)).days, 0)
+        idx_dt = pd.to_datetime(idx)
+        # Normalize to tz-naive to avoid tz-naive vs tz-aware subtraction errors
+        if idx_dt.tzinfo is not None:
+            idx_dt = idx_dt.tz_localize(None)
+        days_to_expiry = max((expiry_dt - idx_dt).days, 0)
         T = days_to_expiry / 365
         model = BlackScholesModel(spot, strike, T, r, sigma)
         theo = model.call_price() if option_type == "call" else model.put_price()
