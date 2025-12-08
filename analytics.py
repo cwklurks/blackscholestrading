@@ -7,6 +7,17 @@ from numpy import exp, log, sqrt
 from scipy.optimize import minimize_scalar
 from scipy.stats import norm
 
+try:
+    from numba import jit
+    NUMBA_AVAILABLE = True
+except ImportError:
+    NUMBA_AVAILABLE = False
+    # Fallback decorator that does nothing
+    def jit(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+
 # Small epsilons to avoid NaNs/infs when T or sigma are near zero
 EPS_TIME = 1e-8
 EPS_VOL = 1e-8
@@ -18,6 +29,18 @@ def clamp_inputs(T: float, sigma: float) -> Tuple[float, float]:
 
 
 class BlackScholesModel:
+    """Black-Scholes option pricing model with Greeks.
+    
+    Attributes:
+        S: Spot price of the underlying asset
+        K: Strike price
+        T: Time to expiration in years
+        r: Risk-free interest rate
+        sigma: Volatility (annualized)
+        dividend_yield: Continuous dividend yield
+        borrow_cost: Cost of borrowing the underlying
+    """
+    
     def __init__(
         self,
         S: float,
@@ -28,6 +51,16 @@ class BlackScholesModel:
         dividend_yield: float = 0.0,
         borrow_cost: float = 0.0,
     ):
+        # Input validation
+        if S <= 0:
+            raise ValueError(f"Spot price must be positive, got {S}")
+        if K <= 0:
+            raise ValueError(f"Strike price must be positive, got {K}")
+        if T < 0:
+            raise ValueError(f"Time to expiry cannot be negative, got {T}")
+        if sigma < 0:
+            raise ValueError(f"Volatility cannot be negative, got {sigma}")
+            
         self.S = S
         self.K = K
         self.T, self.sigma = clamp_inputs(T, sigma)
@@ -89,6 +122,43 @@ class BlackScholesModel:
 
     def rho_put(self) -> float:
         return -self.K * self.T * exp(-self.r * self.T) * norm.cdf(-self.d2()) / 100
+
+
+def bs_call_price_vectorized(
+    S: np.ndarray,
+    K: float,
+    T: float,
+    r: float,
+    sigma: np.ndarray,
+    dividend_yield: float = 0.0,
+    borrow_cost: float = 0.0,
+) -> np.ndarray:
+    """Vectorized Black-Scholes call price calculation.
+    
+    Efficiently computes call prices for a grid of spot prices and volatilities.
+    
+    Args:
+        S: Array of spot prices (can be 1D or 2D meshgrid)
+        K: Strike price (scalar)
+        T: Time to expiry in years
+        r: Risk-free rate
+        sigma: Array of volatilities (same shape as S)
+        dividend_yield: Continuous dividend yield
+        borrow_cost: Borrow cost for short selling
+        
+    Returns:
+        Array of call prices with same shape as S
+    """
+    T = max(T, EPS_TIME)
+    sigma = np.maximum(sigma, EPS_VOL)
+    
+    carry = r - dividend_yield - borrow_cost
+    decay = np.exp(-(dividend_yield + borrow_cost) * T)
+    
+    d1 = (np.log(S / K) + (carry + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    
+    return S * decay * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
 
 
 def implied_volatility(option_price: float, S: float, K: float, T: float, r: float, q: float = 0.0, borrow_cost: float = 0.0, option_type: str = "call") -> float:
@@ -268,83 +338,186 @@ def backtest_option_strategy(
     return pd.DataFrame(records).set_index("date")
 
 
-def binomial_american_option(S, K, T, r, q, sigma, borrow_cost=0.0, steps=150, option_type="call"):
-    steps = max(3, steps)
+@jit(nopython=True, cache=True)
+def _binomial_american_core(S, K, T, r, carry, sigma, steps, is_call):
+    """Numba-optimized core for American option pricing via binomial tree."""
     dt = T / steps
-    u = exp(sigma * sqrt(dt))
-    d = 1 / u
-    carry = r - q - borrow_cost
-    p = (exp(carry * dt) - d) / (u - d)
+    u = np.exp(sigma * np.sqrt(dt))
+    d = 1.0 / u
+    p = (np.exp(carry * dt) - d) / (u - d)
     p = min(max(p, 0.0), 1.0)
-    disc = exp(-r * dt)
+    disc = np.exp(-r * dt)
 
-    prices = np.array([S * (u ** (steps - i)) * (d ** i) for i in range(steps + 1)])
-    option = np.maximum(prices - K, 0) if option_type == "call" else np.maximum(K - prices, 0)
+    # Initialize asset prices at maturity
+    prices = np.empty(steps + 1)
+    for i in range(steps + 1):
+        prices[i] = S * (u ** (steps - i)) * (d ** i)
 
+    # Initialize option values at maturity
+    option = np.empty(steps + 1)
+    if is_call:
+        for i in range(steps + 1):
+            option[i] = max(prices[i] - K, 0.0)
+    else:
+        for i in range(steps + 1):
+            option[i] = max(K - prices[i], 0.0)
+
+    # Backward induction
     for step in range(steps - 1, -1, -1):
-        prices = prices[: step + 1] / u
-        continuation = disc * (p * option[: step + 1] + (1 - p) * option[1 : step + 2])
-        intrinsic = np.maximum(prices - K, 0) if option_type == "call" else np.maximum(K - prices, 0)
-        option = np.maximum(continuation, intrinsic)
+        for i in range(step + 1):
+            prices[i] = prices[i] / u
+            continuation = disc * (p * option[i] + (1 - p) * option[i + 1])
+            if is_call:
+                intrinsic = max(prices[i] - K, 0.0)
+            else:
+                intrinsic = max(K - prices[i], 0.0)
+            option[i] = max(continuation, intrinsic)
 
     return option[0]
 
 
-def heston_mc_price(S, K, T, r, q, sigma, borrow_cost=0.0, option_type="call", kappa=1.5, theta=0.04, v0=None, rho=-0.7, vol_of_vol=0.3, paths=4000, steps=120):
-    np.random.seed(42)
+def binomial_american_option(S, K, T, r, q, sigma, borrow_cost=0.0, steps=150, option_type="call"):
+    """American option pricing via binomial tree with Numba acceleration."""
+    steps = max(3, steps)
+    carry = r - q - borrow_cost
+    is_call = option_type == "call"
+    return _binomial_american_core(S, K, T, r, carry, sigma, steps, is_call)
+
+
+@jit(nopython=True, cache=True)
+def _heston_mc_core(S, K, T, r, drift_adj, v0, kappa, theta, rho, vol_of_vol, z1_all, z2_all, is_call):
+    """Numba-optimized core for Heston model Monte Carlo."""
+    paths = z1_all.shape[1]
+    steps = z1_all.shape[0]
     dt = T / steps
-    v = np.full(paths, sigma**2 if v0 is None else v0)
-    prices = np.full(paths, S, dtype=float)
+    rho_comp = np.sqrt(1.0 - rho * rho)
+
+    prices = np.full(paths, S)
+    v = np.full(paths, v0)
+
+    for t in range(steps):
+        z1 = z1_all[t]
+        z2 = z2_all[t]
+        z2_corr = rho * z1 + rho_comp * z2
+
+        for i in range(paths):
+            v_sqrt = np.sqrt(max(v[i], 1e-8))
+            v[i] = max(v[i] + kappa * (theta - v[i]) * dt + vol_of_vol * v_sqrt * np.sqrt(dt) * z2_corr[i], 1e-8)
+            prices[i] = prices[i] * np.exp((drift_adj - 0.5 * v[i]) * dt + np.sqrt(v[i] * dt) * z1[i])
+
+    total = 0.0
+    if is_call:
+        for i in range(paths):
+            total += max(prices[i] - K, 0.0)
+    else:
+        for i in range(paths):
+            total += max(K - prices[i], 0.0)
+
+    return np.exp(-r * T) * total / paths
+
+
+def heston_mc_price(S, K, T, r, q, sigma, borrow_cost=0.0, option_type="call", kappa=1.5, theta=0.04, v0=None, rho=-0.7, vol_of_vol=0.3, paths=4000, steps=120, seed=42):
+    """Heston stochastic volatility model with Numba acceleration."""
+    rng = np.random.default_rng(seed)
     drift_adj = r - q - borrow_cost
+    v0_val = sigma ** 2 if v0 is None else v0
+    is_call = option_type == "call"
 
-    for _ in range(steps):
-        z1 = np.random.standard_normal(paths)
-        z2 = np.random.standard_normal(paths)
-        z2 = rho * z1 + sqrt(1 - rho**2) * z2
-        v = np.maximum(
-            v + kappa * (theta - v) * dt + vol_of_vol * np.sqrt(np.maximum(v, 1e-8)) * sqrt(dt) * z2,
-            1e-8,
-        )
-        prices = prices * np.exp((drift_adj - 0.5 * v) * dt + np.sqrt(v * dt) * z1)
+    # Pre-generate all random numbers
+    z1_all = rng.standard_normal((steps, paths))
+    z2_all = rng.standard_normal((steps, paths))
 
-    payoff = np.maximum(prices - K, 0) if option_type == "call" else np.maximum(K - prices, 0)
-    disc = exp(-r * T)
-    return disc * np.mean(payoff)
+    return _heston_mc_core(S, K, T, r, drift_adj, v0_val, kappa, theta, rho, vol_of_vol, z1_all, z2_all, is_call)
 
 
-def garch_mc_price(S, K, T, r, q, sigma, borrow_cost=0.0, option_type="call", alpha0=2e-6, alpha1=0.08, beta1=0.9, paths=4000):
-    np.random.seed(42)
+@jit(nopython=True, cache=True)
+def _garch_mc_core(S, K, T, r, drift_adj, sigma_sq, alpha0, alpha1, beta1, z_all, is_call):
+    """Numba-optimized core for GARCH Monte Carlo."""
+    steps = z_all.shape[0]
+    paths = z_all.shape[1]
+    dt = T / steps
+
+    prices = np.full(paths, S)
+    variance = np.full(paths, sigma_sq)
+
+    for t in range(steps):
+        z = z_all[t]
+        for i in range(paths):
+            variance[i] = alpha0 + alpha1 * variance[i] * (z[i] ** 2) + beta1 * variance[i]
+            variance[i] = max(variance[i], 1e-8)
+            prices[i] = prices[i] * np.exp((drift_adj - 0.5 * variance[i]) * dt + np.sqrt(variance[i] * dt) * z[i])
+
+    total = 0.0
+    if is_call:
+        for i in range(paths):
+            total += max(prices[i] - K, 0.0)
+    else:
+        for i in range(paths):
+            total += max(K - prices[i], 0.0)
+
+    return np.exp(-r * T) * total / paths
+
+
+def garch_mc_price(S, K, T, r, q, sigma, borrow_cost=0.0, option_type="call", alpha0=2e-6, alpha1=0.08, beta1=0.9, paths=4000, seed=42):
+    """GARCH(1,1) volatility model with Numba acceleration."""
+    rng = np.random.default_rng(seed)
     steps = max(10, int(252 * T))
-    dt = T / steps if steps else 1 / 252
-    prices = np.full(paths, S, dtype=float)
-    variance = np.full(paths, sigma**2, dtype=float)
     drift_adj = r - q - borrow_cost
+    is_call = option_type == "call"
 
-    for _ in range(steps):
-        z = np.random.standard_normal(paths)
-        variance = alpha0 + alpha1 * variance * (z**2) + beta1 * variance
-        variance = np.maximum(variance, 1e-8)
-        prices = prices * np.exp((drift_adj - 0.5 * variance) * dt + np.sqrt(variance * dt) * z)
+    # Pre-generate all random numbers
+    z_all = rng.standard_normal((steps, paths))
 
-    payoff = np.maximum(prices - K, 0) if option_type == "call" else np.maximum(K - prices, 0)
-    return exp(-r * T) * np.mean(payoff)
+    return _garch_mc_core(S, K, T, r, drift_adj, sigma ** 2, alpha0, alpha1, beta1, z_all, is_call)
 
 
-def bates_jump_diffusion_mc_price(S, K, T, r, q, sigma, borrow_cost=0.0, option_type="call", lambda_jump=0.1, mu_jump=-0.05, delta_jump=0.2, paths=4000, steps=120):
-    np.random.seed(42)
+@jit(nopython=True, cache=True)
+def _bates_mc_core(S, K, T, r, drift_adj, sigma, compensator, mu_jump, delta_jump, z_all, jumps_all, jump_normals_all, is_call):
+    """Numba-optimized core for Bates jump-diffusion Monte Carlo."""
+    steps = z_all.shape[0]
+    paths = z_all.shape[1]
+    dt = T / steps
+    sigma_sqrt_dt = sigma * np.sqrt(dt)
+    drift_term = (drift_adj - 0.5 * sigma * sigma - compensator) * dt
+
+    prices = np.full(paths, S)
+
+    for t in range(steps):
+        z = z_all[t]
+        jumps = jumps_all[t]
+        jump_normals = jump_normals_all[t]
+
+        for i in range(paths):
+            jump_size = 0.0
+            if jumps[i] > 0:
+                jump_size = mu_jump * jumps[i] + delta_jump * np.sqrt(jumps[i]) * jump_normals[i]
+            prices[i] = prices[i] * np.exp(drift_term + sigma_sqrt_dt * z[i] + jump_size)
+
+    total = 0.0
+    if is_call:
+        for i in range(paths):
+            total += max(prices[i] - K, 0.0)
+    else:
+        for i in range(paths):
+            total += max(K - prices[i], 0.0)
+
+    return np.exp(-r * T) * total / paths
+
+
+def bates_jump_diffusion_mc_price(S, K, T, r, q, sigma, borrow_cost=0.0, option_type="call", lambda_jump=0.1, mu_jump=-0.05, delta_jump=0.2, paths=4000, steps=120, seed=42):
+    """Bates jump-diffusion model with Numba acceleration."""
+    rng = np.random.default_rng(seed)
     dt = T / steps
     drift_adj = r - q - borrow_cost
-    prices = np.full(paths, S, dtype=float)
-    compensator = lambda_jump * (exp(mu_jump + 0.5 * delta_jump**2) - 1)
+    compensator = lambda_jump * (exp(mu_jump + 0.5 * delta_jump ** 2) - 1)
+    is_call = option_type == "call"
 
-    for _ in range(steps):
-        z = np.random.standard_normal(paths)
-        jumps = np.random.poisson(lambda_jump * dt, paths)
-        jump_sizes = np.where(jumps > 0, np.random.normal(mu_jump * jumps, delta_jump * np.sqrt(jumps)), 0.0)
-        prices = prices * np.exp((drift_adj - 0.5 * sigma**2 - compensator) * dt + sigma * sqrt(dt) * z + jump_sizes)
+    # Pre-generate all random numbers
+    z_all = rng.standard_normal((steps, paths))
+    jumps_all = rng.poisson(lambda_jump * dt, (steps, paths)).astype(np.float64)
+    jump_normals_all = rng.standard_normal((steps, paths))
 
-    payoff = np.maximum(prices - K, 0) if option_type == "call" else np.maximum(K - prices, 0)
-    return exp(-r * T) * np.mean(payoff)
+    return _bates_mc_core(S, K, T, r, drift_adj, sigma, compensator, mu_jump, delta_jump, z_all, jumps_all, jump_normals_all, is_call)
 
 
 def price_with_model(model_name, S, K, T, r, q, sigma, borrow_cost, option_type, model_params):

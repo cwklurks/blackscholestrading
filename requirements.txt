@@ -4,6 +4,5 @@ numpy
 scipy
 plotly
 yfinance
-matplotlib
-seaborn 
+numba
 pytest

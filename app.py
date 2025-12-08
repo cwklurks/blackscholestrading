@@ -1,27 +1,21 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-from scipy.stats import norm
 import plotly.graph_objects as go
 import plotly.express as px
-import yfinance as yf
 from datetime import datetime, timedelta
-import json
 import warnings
 
 from analytics import (
     BlackScholesModel,
-    implied_volatility,
     monte_carlo_option_price,
     calculate_historical_volatility,
-    iv_hv_stats,
-    risk_reversal_and_fly,
-    generate_gbm_replay,
     backtest_option_strategy,
     option_metrics,
-    atm_iv_from_chain,
-    price_with_model,
+    bs_call_price_vectorized,
 )
+from data_service import fetch_stock_data, fetch_options_chain, parse_uploaded_prices
+from ui_components import CUSTOM_CSS, get_icon, get_chart_layout
 
 warnings.filterwarnings('ignore')
 
@@ -35,134 +29,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for minor tweaks that Streamlit config can't handle
-st.markdown("""
-<style>
-    /* Import Inter font */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-    }
-
-    /* Subtle card styling */
-    .metric-card {
-        background-color: #252526;
-        border: 1px solid #3e3e42;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    .metric-card h3 {
-        margin-top: 0;
-        font-size: 1rem;
-        color: #aaaaaa;
-        font-weight: 500;
-    }
-    .metric-card h2 {
-        margin: 5px 0 0 0;
-        font-size: 2rem;
-        font-weight: 600;
-    }
-    
-    /* Adjust sidebar spacing */
-    .css-1d391kg {
-        padding-top: 1rem;
-    }
-    
-    /* Clean up dataframe styling */
-    .stDataFrame {
-        border: 1px solid #3e3e42;
-        border-radius: 4px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# -----------------------------------------------------------------------------
-# Data Fetching
-# -----------------------------------------------------------------------------
-def get_icon(name, size=20, color="currentColor", mode="html"):
-    if mode == "url":
-        # Use a specific color for the CDN URL (default to white for dark theme)
-        url_color = "white" if color == "currentColor" else color.replace("#", "%23")
-        return f"![{name}](https://api.iconify.design/lucide/{name}.svg?color={url_color}&height={size})"
-
-    # Lucide Icons (v0.344.0)
-    icons = {
-        "activity": '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>',
-        "file-text": '<path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><line x1="10" y1="9" x2="8" y2="9"></line>',
-        "calculator": '<rect width="16" height="20" x="4" y="2" rx="2"></rect><line x1="8" y1="6" x2="16" y2="6"></line><line x1="16" y1="14" x2="16" y2="14"></line><line x1="16" y1="18" x2="16" y2="18"></line><line x1="12" y1="14" x2="12" y2="14"></line><line x1="12" y1="18" x2="12" y2="18"></line><line x1="8" y1="14" x2="8" y2="14"></line><line x1="8" y1="18" x2="8" y2="18"></line>',
-        "database": '<ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>',
-        "wifi": '<path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line>'
-    }
-    
-    svg_content = icons.get(name, "")
-    return f'<svg xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}" viewBox="0 0 24 24" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle;">{svg_content}</svg>'
-
-@st.cache_data(show_spinner=False)
-def fetch_stock_data(ticker, period="1y"):
-    try:
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period=period)
-        info = stock.info
-        fetched_at = datetime.utcnow()
-        if hist is None or hist.empty:
-            return None, None, fetched_at
-        return hist, info, fetched_at
-    except Exception as exc:
-        return None, {"error": str(exc)}, datetime.utcnow()
-
-
-@st.cache_data(show_spinner=False)
-def fetch_options_chain(ticker):
-    try:
-        stock = yf.Ticker(ticker)
-        expirations = stock.options
-        fetched_at = datetime.utcnow()
-
-        if not expirations:
-            return None, None, fetched_at
-
-        all_options = []
-
-        for exp in expirations[:5]:
-            try:
-                opt = stock.option_chain(exp)
-                calls = opt.calls
-                puts = opt.puts
-
-                calls['expiration'] = exp
-                calls['type'] = 'Call'
-                puts['expiration'] = exp
-                puts['type'] = 'Put'
-
-                all_options.append(calls)
-                all_options.append(puts)
-            except Exception:
-                continue
-
-        if all_options:
-            options_df = pd.concat(all_options, ignore_index=True)
-            return options_df, expirations, fetched_at
-        return None, None, fetched_at
-    except Exception:
-        return None, None, datetime.utcnow()
-
-
-def parse_uploaded_prices(upload):
-    if upload is None:
-        return None
-    try:
-        df = pd.read_csv(upload)
-        date_col = [c for c in df.columns if 'date' in c.lower()]
-        price_col = [c for c in df.columns if c.lower() in {'close', 'price'}]
-        if not date_col or not price_col:
-            return None
-        series = pd.Series(df[price_col[0]].values, index=pd.to_datetime(df[date_col[0]]))
-        series = series.sort_index()
-        return series
-    except Exception:
-        return None
+# Apply custom CSS
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
 # Session State
@@ -313,18 +181,6 @@ with st.sidebar:
 # Main Content
 # -----------------------------------------------------------------------------
 
-# Helper for Plotly Dark Theme
-def get_chart_layout(title="", height=400):
-    return dict(
-        title=title,
-        height=height,
-        template="plotly_dark",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=40, r=40, t=40, b=40),
-        font=dict(family="sans-serif", size=12, color="#e0e0e0")
-    )
-
 st.title("Black-Scholes Trader")
 st.markdown(f"Analysis for **{ticker.upper()}** @ ${current_price:.2f}")
 
@@ -357,7 +213,7 @@ with col_put:
         <div style="display: flex; gap: 15px; margin-top: 10px; font-size: 0.9rem; color: #888;">
             <span>Δ {put_metrics['delta']:.3f}</span>
             <span>Θ {put_metrics['theta']:.3f}</span>
-            <span>Γ {call_metrics['gamma']:.4f}</span>
+            <span>Γ {put_metrics['gamma']:.4f}</span>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -373,7 +229,7 @@ with tabs[0]: # Analysis
         greeks_df = pd.DataFrame({
             "Greek": ["Delta", "Gamma", "Theta", "Vega", "Rho"],
             "Call": [call_metrics['delta'], call_metrics['gamma'], call_metrics['theta'], call_metrics['vega'], call_metrics['rho']],
-            "Put": [put_metrics['delta'], call_metrics['gamma'], put_metrics['theta'], call_metrics['vega'], put_metrics['rho']]
+            "Put": [put_metrics['delta'], put_metrics['gamma'], put_metrics['theta'], put_metrics['vega'], put_metrics['rho']]
         })
         st.dataframe(greeks_df.style.format("{:.4f}", subset=["Call", "Put"]), hide_index=True, use_container_width=True)
         
@@ -407,12 +263,12 @@ with tabs[1]: # Heatmaps
     with col_hm_plot:
         spot_range = np.linspace(spot_min, spot_max, 10)
         vol_range = np.linspace(vol_min, vol_max, 10)
-        call_prices = np.zeros((len(vol_range), len(spot_range)))
         
-        for i, v in enumerate(vol_range):
-            for j, s in enumerate(spot_range):
-                model = BlackScholesModel(s, strike, time_to_maturity, interest_rate, v, dividend_yield, borrow_cost)
-                call_prices[i, j] = model.call_price()
+        # Vectorized heatmap calculation
+        spot_grid, vol_grid = np.meshgrid(spot_range, vol_range)
+        call_prices = bs_call_price_vectorized(
+            spot_grid, strike, time_to_maturity, interest_rate, vol_grid, dividend_yield, borrow_cost
+        )
                 
         fig_hm = go.Figure(data=go.Heatmap(
             z=call_prices,
