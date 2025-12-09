@@ -17,9 +17,9 @@
 
 ```mermaid
 flowchart LR
-    Data[Data Provider\n(Yahoo/CSV)] --> Engine[Pricing Engine\n(Models)]
+    Data["Data Provider\n(Yahoo/CSV)"] --> Engine["Pricing Engine\n(Models)"]
     Engine --> Strategy[Strategy Layer]
-    Strategy --> UI[UI Interface\n(Streamlit)]
+    Strategy --> UI["UI Interface\n(Streamlit)"]
     
     subgraph Models
         BS[Black-Scholes]
