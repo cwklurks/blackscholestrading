@@ -1,0 +1,4 @@
+# file: /Users/connork/code/blackscholestrader/analytics.py
+# hypothesis_version: 6.148.7
+
+[-0.7, -0.05, 0.0, 2e-06, 0.0001, 0.001, 0.01, 0.04, 0.05, 0.08, 0.1, 0.2, 0.3, 0.5, 0.9, 1.1, 1.5, -365, 100, 120, 150, 252, 365, 4000, 'B', 'Bates Jump-Diffusion', 'Binomial (American)', 'Black-Scholes', 'GARCH MC', 'Heston MC', 'atm_iv', 'binomial_steps', 'bounded', 'butterfly', 'call', 'date', 'delta', 'edge', 'expiration', 'gamma', 'garch_alpha0', 'garch_alpha1', 'garch_beta1', 'heston_kappa', 'heston_rho', 'heston_theta', 'heston_v0', 'heston_vol_of_vol', 'hv_current', 'impliedVolatility', 'iv_hv_percentile', 'iv_hv_rank', 'jump_delta', 'jump_lambda', 'jump_mu', 'long', 'mc_paths', 'mc_steps', 'option_price', 'pnl', 'price', 'put', 'rho', 'risk_reversal', 'spot', 'strike', 'theta', 'time_to_expiry', 'type', 'vega']

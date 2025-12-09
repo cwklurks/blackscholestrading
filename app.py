@@ -6,13 +6,15 @@ import plotly.express as px
 from datetime import datetime, timedelta
 import warnings
 
-from analytics import (
+from models import (
     BlackScholesModel,
     monte_carlo_option_price,
+    bs_call_price_vectorized,
+)
+from analytics import (
     calculate_historical_volatility,
     backtest_option_strategy,
     option_metrics,
-    bs_call_price_vectorized,
 )
 from data_service import fetch_stock_data, fetch_options_chain, parse_uploaded_prices
 from ui_components import CUSTOM_CSS, get_icon, get_chart_layout
@@ -75,12 +77,13 @@ with st.sidebar:
     col_tick, col_ref = st.columns([0.7, 0.3])
     with col_tick:
         ticker = st.text_input("Ticker", value="AAPL" if use_market_data else "BTC-USD", placeholder="AAPL", disabled=not use_market_data)
+    
+    force_refresh = False
     with col_ref:
         st.write("") # Spacer
         st.write("")
         if st.button("↻", disabled=not use_market_data):
-            fetch_stock_data.clear()
-            fetch_options_chain.clear()
+            force_refresh = True
             st.session_state.last_refresh = datetime.utcnow()
     
     hist = None
@@ -89,7 +92,7 @@ with st.sidebar:
     fetched_at = None
     
     if use_market_data and ticker:
-        hist, info, fetched_at = fetch_stock_data(ticker)
+        hist, info, fetched_at = fetch_stock_data(ticker, force_refresh=force_refresh)
         if hist is not None and not hist.empty:
             current_price = float(hist['Close'].iloc[-1])
             hist_vol = calculate_historical_volatility(hist['Close']) or 0.2
@@ -373,7 +376,7 @@ with tabs[4]: # Portfolio
 
 with tabs[5]: # Chain
     if use_market_data and ticker:
-        chain_df, expirations, _ = fetch_options_chain(ticker)
+        chain_df, expirations, _ = fetch_options_chain(ticker, force_refresh=force_refresh)
         if chain_df is not None:
             sel_exp = st.selectbox("Expiry", expirations[:5] if expirations else [])
             if sel_exp:
@@ -425,4 +428,3 @@ with tabs[6]: # Backtest
                 st.metric("Total P&L", f"${bt_res['pnl'].iloc[-1]:.2f}")
     else:
         st.info("Load market data to backtest.")
-

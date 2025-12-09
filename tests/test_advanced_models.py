@@ -3,13 +3,14 @@
 import math
 import sys
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pytest
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from analytics import (
+from models import (
     BlackScholesModel,
     binomial_american_option,
     heston_mc_price,
@@ -198,7 +199,7 @@ class TestReproducibility:
     
     def test_heston_reproducible(self):
         """Heston MC with same seed should produce same result."""
-        params = dict(S=100, K=100, T=0.5, r=0.05, q=0.0, sigma=0.2, paths=1000, steps=50)
+        params: dict[str, Any] = dict(S=100, K=100, T=0.5, r=0.05, q=0.0, sigma=0.2, paths=1000, steps=50)
         
         price1 = heston_mc_price(**params, seed=123)
         price2 = heston_mc_price(**params, seed=123)
@@ -209,7 +210,7 @@ class TestReproducibility:
     
     def test_garch_reproducible(self):
         """GARCH MC with same seed should produce same result."""
-        params = dict(S=100, K=100, T=0.5, r=0.05, q=0.0, sigma=0.2, paths=1000)
+        params: dict[str, Any] = dict(S=100, K=100, T=0.5, r=0.05, q=0.0, sigma=0.2, paths=1000)
         
         price1 = garch_mc_price(**params, seed=123)
         price2 = garch_mc_price(**params, seed=123)
@@ -218,10 +219,9 @@ class TestReproducibility:
     
     def test_bates_reproducible(self):
         """Bates MC with same seed should produce same result."""
-        params = dict(S=100, K=100, T=0.5, r=0.05, q=0.0, sigma=0.2, paths=1000, steps=50)
+        params: dict[str, Any] = dict(S=100, K=100, T=0.5, r=0.05, q=0.0, sigma=0.2, paths=1000, steps=50)
         
         price1 = bates_jump_diffusion_mc_price(**params, seed=123)
         price2 = bates_jump_diffusion_mc_price(**params, seed=123)
         
         assert price1 == price2, "Same seed should produce same result"
-

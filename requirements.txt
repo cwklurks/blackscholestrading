@@ -5,4 +5,4 @@ scipy
 plotly
 yfinance
 numba
-pytest
+matplotlib

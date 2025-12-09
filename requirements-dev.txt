@@ -1,0 +1,8 @@
+pytest
+mypy
+ruff
+hypothesis
+pandas-stubs
+types-requests
+types-setuptools
+

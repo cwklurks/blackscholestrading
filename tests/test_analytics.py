@@ -8,9 +8,11 @@ import pandas as pd
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from analytics import (  # noqa: E402
-    BlackScholesModel,
     backtest_option_strategy,
     iv_hv_stats,
+)
+from models import (
+    BlackScholesModel,
     monte_carlo_option_price,
 )
 
