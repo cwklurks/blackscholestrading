@@ -7,10 +7,8 @@ import pandas as pd
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from analytics import (  # noqa: E402
-    backtest_option_strategy,
-    iv_hv_stats,
-)
+from models.engine import iv_hv_stats  # noqa: E402
+from strategies.backtest import backtest_option_strategy  # noqa: E402
 from models import (
     BlackScholesModel,
     monte_carlo_option_price,
