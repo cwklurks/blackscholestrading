@@ -204,28 +204,117 @@ Example response for `GET /api/models` (Heston entry):
 
 ### Tech Stack
 - Next.js 15 with App Router
-- shadcn/ui for all UI primitives
+- shadcn/ui for UI primitives (not cards — workspace panes, tables, inputs, selects)
 - Plotly.js for financial charts
-- Tailwind CSS with dark mode (zinc/neutral tokens)
+- Tailwind CSS with dark mode (custom CSS variable system, NOT raw zinc classes)
 - Geist Sans for UI text, Geist Mono for prices/Greeks/numbers
 - SWR for data fetching with stale-while-revalidate caching
 
+### Visual Thesis
+
+This is a professional pricing workstation, not a SaaS dashboard. The visual anchor is the **live payoff/sensitivity curve** that dominates the workspace canvas and updates as parameters change. Data IS the brand. No decorative cards, no card grids, no hero sections.
+
+### Design Tokens
+
+**Colors (CSS variables in `:root`)**:
+- `--bg`: `#09090b` (zinc-950) — page background
+- `--surface`: `#18181b` (zinc-900) — pane/panel background
+- `--border`: `#27272a` (zinc-800) — borders and dividers
+- `--text-primary`: `#fafafa` (zinc-50) — primary text
+- `--text-secondary`: `#a1a1aa` (zinc-400) — labels, captions
+- `--text-muted`: `#52525b` (zinc-600) — disabled, placeholder
+- `--positive`: `#34d399` (emerald-400) — calls, profit, positive Greeks
+- `--negative`: `#f87171` (red-400) — puts, loss, negative values
+- `--accent`: `#3b82f6` (blue-500) — interactive elements, selected states
+- `--heatmap-scale`: red (#ef4444) → transparent black → green (#22c55e), centered on ATM
+- `--vol-surface-scale`: Plotly `Plasma` colorscale
+
+**Typography**:
+- Price display: `text-3xl font-semibold font-mono tabular-nums` (Geist Mono 30px/600)
+- Greek values: `text-sm font-mono tabular-nums` (Geist Mono 14px/400)
+- Greek labels: `text-xs text-[--text-secondary] uppercase tracking-wider` (Geist Sans 12px)
+- Section headings: `text-lg font-medium` (Geist Sans 18px/500)
+- Body / labels: `text-sm` (Geist Sans 14px/400)
+- Nav items: `text-sm font-medium` (Geist Sans 14px/500)
+
+**Layout**:
+- Max content width: 1440px
+- Sidebar: 240px (desktop), 48px icon rail (<1024px)
+- Pane padding: `p-5` (20px)
+- Section gap: `gap-4` (16px)
+- Border radius: `rounded-lg` (8px) — not rounded-xl, not rounded-2xl
+- Chart heights: primary 360px, secondary 240px, full-page 480px
+
+**Charts (Plotly config)**:
+- Template: `plotly_dark`
+- Paper/plot bgcolor: `rgba(0,0,0,0)` (transparent, uses CSS --surface)
+- Axis text: `--text-secondary` (#a1a1aa)
+- Font: `'Geist Sans', sans-serif`, 12px
+- Margins: `{ l: 48, r: 16, t: 32, b: 40 }`
+- Sensitivity charts: tabbed single chart (Delta | Gamma | Vega selector), not three separate charts
+- MC histogram: 50 bins, density curve overlay, vertical lines for strike + expected value
+- Candlestick: includes volume bars below, default range 6M
+
 ### Pages
 
-1. **Dashboard** (`/`): Hero pricing cards (Call/Put with price + top Greeks), quick model selector, key charts at a glance
-2. **Pricing** (`/pricing`): Full model configuration, all 5 Greeks displayed, sensitivity charts (Delta/Gamma/Vega vs Spot), heatmap, Monte Carlo terminal price distribution histogram (when MC model is selected)
-3. **Volatility** (`/volatility`): 3D vol surface (Plotly surface plot), 2D smile curves per expiry, ATM term structure. Requires live data.
-4. **Strategies** (`/strategies`): Multi-leg builder with add/remove legs, real-time payoff diagram, breakeven annotations, pre-built templates (straddle, strangle, iron condor, butterfly, collar)
-5. **Backtest** (`/backtest`): Strategy selection, time period, cumulative P&L chart, risk metrics (Sharpe, drawdown, win rate), comparison vs buy-and-hold
-6. **Market** (`/market`): Candlestick chart, options chain table, historical volatility chart, IV/HV comparison
+**Nav order**: Dashboard > Pricing > Volatility > Strategies > Backtest > Market
 
-### Design Principles
-- Dark mode by default (financial dashboard aesthetic)
-- Numbers in monospace font (Geist Mono)
-- Green = calls/profit, Red = puts/loss (consistent color coding)
-- Dense but readable information layout
-- Skeleton loaders for every async operation
-- Responsive: desktop primary, tablet secondary
+All pages **pre-populate with defaults**: AAPL, ATM strike, 30 DTE, historical vol, risk-free rate 5%. The app shows results on first load without any user input.
+
+1. **Dashboard** (`/`): Pricing workspace layout — left rail has ticker input, model selector, base params (S, K, T, r, sigma). Right canvas shows: (top) price + Call/Put toggle with all 5 Greeks in a row, (middle) live payoff curve as the visual anchor, (bottom) vol surface preview (240px, AAPL default, click to navigate to /volatility). No cards. One job: "price an option fast."
+
+2. **Pricing** (`/pricing`): Full sensitivity analysis workspace. Left rail: all params including collapsible "Advanced Parameters" section for model-specific params (Heston: kappa, theta, rho, vol_of_vol; GARCH: alpha0, alpha1, beta1). "Price Option" button triggers computation (no auto-reprice for MC models). Right canvas: tabbed sensitivity chart (Delta | Gamma | Vega | Theta vs Spot), heatmap below, MC histogram (when MC model selected). One job: "inspect sensitivities."
+
+3. **Volatility** (`/volatility`): Upper 60% = 3D vol surface (480px, Plasma colorscale, rotation enabled, scroll-zoom disabled). Lower 40% = two columns: smile curves (left, all expiries as colored lines) and ATM term structure (right). Coverage badge: "Coverage: 73%" next to ticker. Warning below 40%: "Sparse data — surface may be unreliable." One job: "explore the surface."
+
+4. **Strategies** (`/strategies`): Template picker as primary entry point (straddle, strangle, iron condor, butterfly, collar) with payoff diagram thumbnail for each. Below: custom leg builder (secondary). Right canvas: live payoff diagram with breakeven annotations, max profit/loss labels. One job: "build a payoff."
+
+5. **Backtest** (`/backtest`): Strategy config (from /strategies or manual), date range presets (1M, 3M, 6M, 1Y, 3Y) + custom date picker. Canvas: cumulative P&L line chart, risk metrics row (Sharpe, Max Drawdown, Win Rate in mono). One job: "evaluate performance."
+
+6. **Market** (`/market`): Candlestick + volume chart (6M default), options chain table (scrolls horizontally on tablet), HV chart with IV overlay. One job: "see the market."
+
+### Interaction States
+
+| Feature | Loading | Empty | Error | Success |
+|---------|---------|-------|-------|---------|
+| Dashboard pricing | Skeleton workspace + "Waking pricing engine... ~15s" badge | Pre-populated (never empty) | Inline error below ticker: "No data for XYZ" | Price + Greeks fill in, curve animates |
+| Sensitivity charts | Shimmer skeleton at chart height | Pre-populated | "Could not compute — check parameters" banner | Chart renders with fade-in |
+| Heatmap | Shimmer grid | Pre-populated | Same banner | Grid fills in |
+| Monte Carlo | "Running simulation..." + elapsed time counter | Requires button click | "Simulation failed — reduce paths" | Histogram + metrics appear |
+| Vol surface | Shimmer 3D region | "Enter a ticker to generate surface" | "Sparse data" warning OR "Network error — could not reach data provider" (distinct from bad ticker) | Surface renders with rotation |
+| Strategy payoff | Instant (client-side math) | Template picker shown, no legs yet — "Pick a strategy or build custom" | N/A (client-side) | Payoff curve + breakevens |
+| Backtest | "Running backtest..." + elapsed time | "Configure a strategy to backtest" | "No price data available for this period" | P&L chart + metrics |
+| Options chain | Shimmer table rows | "Enter a ticker" | "No chain data — ticker may not have listed options" | Table fills in |
+
+**Error presentation pattern**: Inline error below the triggering input for bad data (wrong ticker, invalid params). Top banner for infrastructure errors (network down, API timeout). Never toast — toasts disappear and financial data errors need to persist.
+
+**SWR behavior**: Show stale data during revalidation (stale-while-revalidate is correct for financial data — better to show slightly old prices than flash a skeleton).
+
+### Responsive Behavior
+
+- **>1024px (desktop)**: Full sidebar (240px) + workspace canvas
+- **768-1024px (tablet)**: Sidebar collapses to 48px icon rail (labels on hover, toggle to expand). Charts reflow to 100% width. Options chain table scrolls horizontally.
+- **<768px (mobile)**: Not a primary target. Icon rail persists. Single-column layout. Charts stack vertically.
+
+### Accessibility
+
+- ARIA labels on all data tables (`role="table"`, column headers)
+- ARIA labels on chart regions (`role="img"`, `aria-label="Delta sensitivity chart"`)
+- Screen reader text for Greek symbols: "Delta: 0.5432" not just "Δ 0.5432"
+- Keyboard nav: Tab through sidebar → inputs → action buttons → charts
+- Minimum touch target: 44px on all interactive elements
+- Color contrast: WCAG AA minimum (4.5:1 for text against --bg and --surface)
+- Motion: respect `prefers-reduced-motion` — disable chart animations, keep functionality
+
+### Greeks Display Format
+
+- Delta, Rho: 4 decimal places
+- Gamma: 6 decimal places (very small values)
+- Vega, Theta: 4 decimal places
+- Always show sign (+0.5432, -0.0234)
+- Label format: "Δ Delta" with full name for screen readers
+- Color: negative values in `--negative`, positive in `--text-primary` (NOT --positive — Greeks are not directional bets)
+- Units shown in tooltip: "Theta: daily decay per $1 of option premium"
 
 ## Backend Cleanup
 
@@ -285,3 +374,37 @@ The integration job uses Docker Compose to start both services. The API health e
 - Mobile-optimized layout (desktop + tablet only)
 - GPU/CUDA acceleration (Numba CPU JIT is the performance story)
 - 3D Greeks surfaces (Delta/Gamma/Vega as 3D surface plots over Spot x Vol) - could be a follow-up. Note: 2D sensitivity curves (Greeks vs Spot) ARE in scope on the Pricing page.
+
+## Engineering Review Amendments
+
+The following decisions were made during /plan-eng-review on 2026-03-23:
+
+1. **Extract `models/engine.py`** — Orchestration functions (`option_metrics`, `price_with_model`, `numerical_greeks`, `implied_volatility`, `calculate_historical_volatility`, `iv_hv_stats`, `atm_iv_from_chain`, `risk_reversal_and_fly`) move from `analytics.py` to `models/engine.py`. Service layer calls engine. Engine is testable independently.
+
+2. **CORS from environment variable** — `CORS_ORIGINS` env var, defaulting to `http://localhost:3000` for dev. Production URL configured per-environment.
+
+3. **Phased migration** — Not a big-bang restructure. Four phases:
+   - Phase 1: Fix broken imports, create `models/engine.py`, fix deprecated `datetime.utcnow()`, add engine tests
+   - Phase 2: Add FastAPI layer (`api/`) on top of existing `models/`, `data/`, `strategies/`
+   - Phase 3: Build Next.js frontend (`web/`)
+   - Phase 4: Delete Streamlit code (`app.py`, `ui_components.py`, `analytics.py`), update CI, add Docker Compose
+
+4. **Fix deprecated `datetime.utcnow()`** — Replace with `datetime.now(datetime.UTC)` in `data_service.py`.
+
+5. **Tests mandatory per phase** — Each phase includes its own test suite. No phase merges without passing tests. 38 new tests needed across engine, API, frontend, and E2E.
+
+6. **MC timeout + input limits** — Cap `mc_paths` at 50,000 and `mc_steps` at 500 in Pydantic schemas. 30-second request timeout in FastAPI middleware.
+
+7. **Critical gap: yfinance error disambiguation** — Network errors vs bad ticker should return distinct error messages to the frontend.
+
+## GSTACK REVIEW REPORT
+
+| Review | Trigger | Why | Runs | Status | Findings |
+|--------|---------|-----|------|--------|----------|
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 0 | — | — |
+| Codex Review | `/codex review` | Independent 2nd opinion | 0 | — | — |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 1 | CLEAR | 5 issues, 1 critical gap |
+| Design Review | `/plan-design-review` | UI/UX gaps | 1 | CLEAR | score: 4/10 → 8/10, 7 decisions |
+
+- **UNRESOLVED:** 0
+- **VERDICT:** ENG + DESIGN CLEARED — ready to implement. Run `/design-consultation` before Phase 3 (frontend) to create DESIGN.md.
