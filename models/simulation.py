@@ -4,7 +4,7 @@ import numpy as np
 from numpy import exp
 
 from utils.numba_compat import jit
-from models.utils import clamp_inputs
+from utils.constants import clamp_inputs
 
 
 @jit(nopython=True, cache=True)

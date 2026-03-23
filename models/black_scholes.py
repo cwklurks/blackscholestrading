@@ -2,7 +2,7 @@ import numpy as np
 from numpy import exp, log, sqrt
 from scipy.stats import norm
 
-from models.utils import clamp_inputs, EPS_TIME, EPS_VOL
+from utils.constants import clamp_inputs, EPS_TIME, EPS_VOL
 
 
 class BlackScholesModel:
