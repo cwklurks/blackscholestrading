@@ -2,7 +2,7 @@
 
 import json
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Optional, Tuple, List, Any
 from pathlib import Path
 
@@ -47,7 +47,7 @@ def _load_from_cache(key: str, data_type: str = "parquet") -> Optional[Any]:
             meta = json.load(f)
         
         fetched_at = datetime.fromisoformat(meta['fetched_at'])
-        if datetime.utcnow() - fetched_at > CACHE_EXPIRY:
+        if datetime.now(UTC) - fetched_at > CACHE_EXPIRY:
             return None # Expired
             
         if data_type == "parquet":
@@ -66,7 +66,7 @@ def _save_to_cache(key: str, data: Any, data_type: str = "parquet"):
     meta_path = _get_cache_path(key + "_meta", "json")
     
     try:
-        fetched_at = datetime.utcnow()
+        fetched_at = datetime.now(UTC)
         if data_type == "parquet":
             data.to_parquet(path)
         elif data_type == "json":
@@ -89,7 +89,7 @@ def fetch_stock_data(ticker: str, period: str = "1y", force_refresh: bool = Fals
     Returns:
         Tuple of (history DataFrame, info dict, fetch timestamp)
     """
-    fetched_at = datetime.utcnow()
+    fetched_at = datetime.now(UTC)
     
     if not ticker or not ticker.strip():
         return None, {"error": "Invalid ticker: empty string"}, fetched_at
@@ -133,7 +133,7 @@ def fetch_options_chain(ticker: str, force_refresh: bool = False) -> Tuple[Optio
     Returns:
         Tuple of (options DataFrame, list of expiration dates, fetch timestamp)
     """
-    fetched_at = datetime.utcnow()
+    fetched_at = datetime.now(UTC)
     
     if not ticker or not ticker.strip():
         return None, None, fetched_at
