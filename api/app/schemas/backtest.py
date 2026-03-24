@@ -1,6 +1,7 @@
 """Pydantic schemas for strategy and backtest endpoints."""
+from datetime import date
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class StrategyLeg(BaseModel):
@@ -11,9 +12,14 @@ class StrategyLeg(BaseModel):
     entry_price: Optional[float] = None
 
 
+class SpotRange(BaseModel):
+    min: float
+    max: float
+
+
 class PayoffRequest(BaseModel):
     legs: list[StrategyLeg] = Field(min_length=1)
-    spot_range: dict  # {min, max}
+    spot_range: SpotRange
     S: float = Field(gt=0, description="Current spot for entry pricing")
     T: float = Field(ge=0, default=0.0833, description="Time to expiry for entry pricing")
     r: float = Field(default=0.05)
@@ -34,6 +40,12 @@ class BacktestLeg(BaseModel):
     expiry: str
     qty: int = Field(ge=1, default=1)
     side: str = Field(pattern="^(long|short)$")
+
+    @field_validator("expiry")
+    @classmethod
+    def validate_expiry(cls, v: str) -> str:
+        date.fromisoformat(v)
+        return v
 
 
 class BacktestRequest(BaseModel):

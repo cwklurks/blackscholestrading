@@ -24,10 +24,12 @@ class PricingRequest(BaseModel):
     @model_validator(mode="after")
     def clamp_mc_params(self):
         """Enforce mc_paths <= 50000 and mc_steps <= 500 (eng review #6)."""
-        if "mc_paths" in self.model_params:
-            self.model_params["mc_paths"] = min(self.model_params["mc_paths"], 50000)
-        if "mc_steps" in self.model_params:
-            self.model_params["mc_steps"] = min(self.model_params["mc_steps"], 500)
+        params = dict(self.model_params)
+        if "mc_paths" in params:
+            params["mc_paths"] = min(params["mc_paths"], 50000)
+        if "mc_steps" in params:
+            params["mc_steps"] = min(params["mc_steps"], 500)
+        self.model_params = params
         return self
 
     def to_engine_kwargs(self) -> dict:
@@ -93,7 +95,7 @@ class VolSurfaceRequest(BaseModel):
 class VolSurfacePoint(BaseModel):
     strike: float
     expiry: str
-    iv: Optional[float]
+    iv: Optional[float] = None
 
 
 class VolSurfaceResponse(BaseModel):
