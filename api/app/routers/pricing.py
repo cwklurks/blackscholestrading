@@ -5,8 +5,10 @@ from api.app.schemas.pricing import (
     PricingRequest, PricingResponse,
     HeatmapRequest, HeatmapResponse,
     MonteCarloRequest, MonteCarloResponse,
+    VolSurfaceRequest, VolSurfaceResponse,
 )
 from api.app.services.pricing_service import compute_price, compute_heatmap, compute_monte_carlo
+from api.app.services.volatility_service import compute_volatility_surface
 
 router = APIRouter(tags=["pricing"])
 
@@ -35,5 +37,13 @@ async def monte_carlo(request: MonteCarloRequest):
         sigma=request.sigma, paths=request.paths,
         option_type=request.option_type, q=request.q,
         borrow_cost=request.borrow_cost,
+    )
+    return result
+
+
+@router.post("/volatility-surface", response_model=VolSurfaceResponse)
+async def volatility_surface(request: VolSurfaceRequest):
+    result = compute_volatility_surface(
+        request.ticker, request.strikes, request.expirations,
     )
     return result
