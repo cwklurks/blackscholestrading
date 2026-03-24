@@ -6,8 +6,7 @@ from api.app.schemas.pricing import (
     HeatmapRequest, HeatmapResponse,
     MonteCarloRequest, MonteCarloResponse,
 )
-from api.app.services.pricing_service import compute_price, compute_heatmap
-from models.simulation import monte_carlo_option_price
+from api.app.services.pricing_service import compute_price, compute_heatmap, compute_monte_carlo
 
 router = APIRouter(tags=["pricing"])
 
@@ -31,16 +30,10 @@ async def compute_heatmap_endpoint(request: HeatmapRequest):
 
 @router.post("/monte-carlo", response_model=MonteCarloResponse)
 async def monte_carlo(request: MonteCarloRequest):
-    price, se, terminal = monte_carlo_option_price(
+    result = compute_monte_carlo(
         S=request.S, K=request.K, T=request.T, r=request.r,
-        sigma=request.sigma, num_simulations=request.paths,
+        sigma=request.sigma, paths=request.paths,
         option_type=request.option_type, q=request.q,
         borrow_cost=request.borrow_cost,
     )
-    ci = [price - 1.96 * se, price + 1.96 * se]
-    return {
-        "price": price,
-        "std_error": se,
-        "terminal_prices": terminal.tolist(),
-        "confidence_interval": ci,
-    }
+    return result
