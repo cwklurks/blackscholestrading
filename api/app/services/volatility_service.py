@@ -1,5 +1,5 @@
 """Volatility surface service - IV computation across strike/expiry grid."""
-from datetime import datetime, UTC
+from datetime import date
 from typing import Optional
 
 from data_service import fetch_options_chain
@@ -9,9 +9,7 @@ from models.engine import implied_volatility
 def _years_to_expiry(expiry_str: str) -> float:
     """Convert expiration date string to time-to-expiry in years."""
     try:
-        exp_date = datetime.strptime(expiry_str, "%Y-%m-%d")
-        today = datetime.now(UTC).replace(tzinfo=None)
-        days = (exp_date - today).days
+        days = (date.fromisoformat(expiry_str) - date.today()).days
         return max(days, 1) / 365.0
     except (ValueError, TypeError):
         return 30 / 365.0  # Fallback: ~1 month
