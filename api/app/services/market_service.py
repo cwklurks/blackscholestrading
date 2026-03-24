@@ -1,11 +1,22 @@
 """Market data service - wraps data_service.py with error handling."""
 from datetime import datetime, UTC
 
+import math
+
 import numpy as np
 from fastapi import HTTPException
 
 from data_service import fetch_stock_data, fetch_options_chain
 from models.engine import calculate_historical_volatility
+
+
+def _safe_float(val, default: float = 0.0) -> float:
+    """Convert to float, returning default for NaN/None/invalid."""
+    try:
+        result = float(val)
+        return result if math.isfinite(result) else default
+    except (TypeError, ValueError):
+        return default
 
 
 def get_market_data(ticker: str) -> dict:
@@ -36,11 +47,11 @@ def get_market_data(ticker: str) -> dict:
     for idx, row in history_df.iterrows():
         history.append({
             "date": str(idx.date()) if hasattr(idx, "date") else str(idx),
-            "open": float(row.get("Open", 0)),
-            "high": float(row.get("High", 0)),
-            "low": float(row.get("Low", 0)),
-            "close": float(row.get("Close", 0)),
-            "volume": float(row.get("Volume", 0)) if row.get("Volume") is not None else None,
+            "open": _safe_float(row.get("Open")),
+            "high": _safe_float(row.get("High")),
+            "low": _safe_float(row.get("Low")),
+            "close": _safe_float(row.get("Close")),
+            "volume": _safe_float(row.get("Volume")) if row.get("Volume") is not None else None,
         })
 
     return {
@@ -66,11 +77,11 @@ def get_options_chain(ticker: str) -> dict:
 
     for _, row in chain_df.iterrows():
         entry = {
-            "strike": float(row.get("strike", 0)),
-            "lastPrice": float(row.get("lastPrice", 0)),
-            "iv": float(row["impliedVolatility"]) if row.get("impliedVolatility") is not None else None,
-            "volume": float(row["volume"]) if row.get("volume") is not None else None,
-            "oi": float(row["openInterest"]) if row.get("openInterest") is not None else None,
+            "strike": _safe_float(row.get("strike")),
+            "lastPrice": _safe_float(row.get("lastPrice")),
+            "iv": _safe_float(row.get("impliedVolatility")) or None,
+            "volume": _safe_float(row.get("volume")) or None,
+            "oi": _safe_float(row.get("openInterest")) or None,
         }
         option_type = str(row.get("type", "")).lower()
         if option_type == "call":
