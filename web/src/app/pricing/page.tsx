@@ -386,16 +386,16 @@ export default function PricingPage() {
 
               {/* Histogram */}
               <BaseChart
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 data={[
                   {
-                    type: "histogram" as const,
+                    type: "histogram",
                     x: mcResult.terminal_prices,
                     nbinsx: 60,
                     marker: { color: "#3b82f680", line: { color: "#3b82f6", width: 1 } },
                     name: "Terminal Prices",
-                  } as any, // nbinsx is valid plotly but missing from TS types
-                ]}
+                  },
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ] as any}
                 layout={{
                   title: { text: "Terminal Price Distribution", font: { size: 14 } },
                   xaxis: { title: { text: "Terminal Price" } },
