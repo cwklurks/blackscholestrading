@@ -64,3 +64,4 @@ class YahooProvider(MarketDataProvider):
         except Exception:
             return None, None
 
+

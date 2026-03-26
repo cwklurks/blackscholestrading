@@ -1,6 +1,14 @@
 """FastAPI entrypoint for the Black-Scholes Pricing Engine."""
 import asyncio
 import os
+import sys
+from pathlib import Path
+
+# Ensure api/ is on sys.path so bare imports (models.*, utils.*, etc.) resolve
+# whether running from project root or from within api/.
+_api_root = str(Path(__file__).resolve().parent.parent)
+if _api_root not in sys.path:
+    sys.path.insert(0, _api_root)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
