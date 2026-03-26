@@ -27,7 +27,7 @@ def get_market_data(ticker: str) -> dict:
         error_msg = str(e).lower()
         if "no data" in error_msg or "not found" in error_msg:
             raise HTTPException(status_code=404, detail=f"Ticker '{ticker}' not found")
-        raise HTTPException(status_code=502, detail=f"Market data fetch failed: {e}")
+        raise HTTPException(status_code=502, detail="Market data temporarily unavailable")
 
     if history_df is None or history_df.empty:
         raise HTTPException(status_code=404, detail=f"No price data for '{ticker}'")
@@ -67,7 +67,7 @@ def get_options_chain(ticker: str) -> dict:
     try:
         chain_df, expirations, _fetched_at = fetch_options_chain(ticker)
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Options chain fetch failed: {e}")
+        raise HTTPException(status_code=502, detail="Options chain data temporarily unavailable")
 
     if chain_df is None or chain_df.empty:
         return {"calls": [], "puts": [], "expirations": expirations or []}

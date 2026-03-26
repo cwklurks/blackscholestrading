@@ -21,7 +21,7 @@ def run_backtest(ticker: str, legs: list[dict], r: float, sigma: float) -> dict:
     try:
         history_df, info, _fetched_at = fetch_stock_data(ticker)
     except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Backtest data fetch failed: {e}")
+        raise HTTPException(status_code=502, detail="Market data temporarily unavailable")
 
     if history_df is None or history_df.empty:
         raise HTTPException(status_code=404, detail=f"No data for '{ticker}'")
