@@ -44,6 +44,6 @@ async def monte_carlo(request: MonteCarloRequest):
 @router.post("/volatility-surface", response_model=VolSurfaceResponse)
 async def volatility_surface(request: VolSurfaceRequest):
     result = compute_volatility_surface(
-        request.ticker, request.strikes, request.expirations,
+        request.ticker, request.strikes, request.expirations, request.r,
     )
     return result

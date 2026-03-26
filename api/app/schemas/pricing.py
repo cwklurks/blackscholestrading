@@ -22,13 +22,29 @@ class PricingRequest(BaseModel):
     model_params: dict = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def clamp_mc_params(self):
-        """Enforce mc_paths <= 50000 and mc_steps <= 500 (eng review #6)."""
-        params = dict(self.model_params)
-        if "mc_paths" in params:
-            params["mc_paths"] = min(params["mc_paths"], 50000)
-        if "mc_steps" in params:
-            params["mc_steps"] = min(params["mc_steps"], 500)
+    def clamp_model_params(self):
+        """Whitelist and clamp all model-specific params to prevent CPU abuse."""
+        PARAM_BOUNDS = {
+            "mc_paths": (100, 50000),
+            "mc_steps": (10, 500),
+            "binomial_steps": (10, 500),
+            "heston_kappa": (0.01, 20.0),
+            "heston_theta": (0.0001, 1.0),
+            "heston_v0": (0.0001, 1.0),
+            "heston_rho": (-1.0, 1.0),
+            "heston_vol_of_vol": (0.01, 2.0),
+            "garch_alpha0": (1e-8, 0.01),
+            "garch_alpha1": (0.001, 0.5),
+            "garch_beta1": (0.5, 0.999),
+            "jump_lambda": (0.0, 2.0),
+            "jump_mu": (-0.5, 0.5),
+            "jump_delta": (0.01, 1.0),
+        }
+        params = {}
+        for key, value in self.model_params.items():
+            if key in PARAM_BOUNDS:
+                lo, hi = PARAM_BOUNDS[key]
+                params[key] = max(lo, min(float(value), hi))
         self.model_params = params
         return self
 
@@ -58,6 +74,23 @@ class HeatmapRequest(BaseModel):
     borrow_cost: float = 0.0
     spot_range: RangeSpec
     vol_range: RangeSpec
+
+    @model_validator(mode="after")
+    def validate_ranges(self):
+        """Enforce sane range bounds to prevent NaN/Inf grids."""
+        if self.spot_range.min <= 0:
+            raise ValueError("spot_range.min must be > 0")
+        if self.spot_range.min >= self.spot_range.max:
+            raise ValueError("spot_range.min must be < spot_range.max")
+        if self.spot_range.max > 1_000_000:
+            raise ValueError("spot_range.max must be <= 1,000,000")
+        if self.vol_range.min <= 0:
+            raise ValueError("vol_range.min must be > 0")
+        if self.vol_range.min >= self.vol_range.max:
+            raise ValueError("vol_range.min must be < vol_range.max")
+        if self.vol_range.max > 10.0:
+            raise ValueError("vol_range.max must be <= 10.0")
+        return self
 
 
 class HeatmapResponse(BaseModel):
@@ -90,6 +123,7 @@ class VolSurfaceRequest(BaseModel):
     ticker: str
     strikes: Optional[list[float]] = None
     expirations: Optional[list[str]] = None
+    r: float = Field(default=0.05, description="Risk-free rate for IV computation")
 
 
 class VolSurfacePoint(BaseModel):
