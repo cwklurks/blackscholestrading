@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { BaseChart } from "@/components/charts/base-chart";
 import { api } from "@/lib/api";
+import { ParamInput } from "@/components/ui/param-input";
 import type { BacktestLeg, BacktestResponse } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -440,48 +441,6 @@ function LegRow({ leg, index, onChange, onRemove }: LegRowProps) {
           className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm font-mono text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
         />
       </div>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// ParamInput - reusable number input (matches strategies page pattern)
-// ---------------------------------------------------------------------------
-
-interface ParamInputProps {
-  label: string;
-  value: number;
-  step: number;
-  min?: number;
-  max?: number;
-  onChange: (value: number) => void;
-}
-
-function ParamInput({
-  label,
-  value,
-  step,
-  min,
-  max,
-  onChange,
-}: ParamInputProps) {
-  return (
-    <div>
-      <label className="mb-1 block text-xs text-muted-foreground">
-        {label}
-      </label>
-      <input
-        type="number"
-        step={step}
-        min={min}
-        max={max}
-        value={value}
-        onChange={(e) => {
-          const parsed = parseFloat(e.target.value);
-          if (!Number.isNaN(parsed)) onChange(parsed);
-        }}
-        className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
-      />
     </div>
   );
 }
