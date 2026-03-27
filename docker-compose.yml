@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   api:
     build: ./api
@@ -8,7 +6,12 @@ services:
     volumes:
       - ./api:/app
     environment:
-      - CORS_ORIGINS=http://localhost:3000
+      - CORS_ORIGINS=http://localhost:3000,http://web:3000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   web:
     build: ./web
@@ -18,6 +21,7 @@ services:
       - ./web:/app
       - /app/node_modules
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_API_URL=http://api:8000
     depends_on:
-      - api
+      api:
+        condition: service_healthy

@@ -120,9 +120,9 @@ class MonteCarloResponse(BaseModel):
 
 
 class VolSurfaceRequest(BaseModel):
-    ticker: str
-    strikes: Optional[list[float]] = None
-    expirations: Optional[list[str]] = None
+    ticker: str = Field(min_length=1, max_length=10, pattern=r"^[A-Za-z0-9.\-\^]+$")
+    strikes: Optional[list[float]] = Field(default=None, max_length=200)
+    expirations: Optional[list[str]] = Field(default=None, max_length=20)
     r: float = Field(default=0.05, description="Risk-free rate for IV computation")
 
 

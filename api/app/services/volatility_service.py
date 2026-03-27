@@ -33,7 +33,8 @@ def compute_volatility_surface(
 
     exps = expirations or (available_exps[:5] if available_exps else [])
 
-    # Estimate spot price as median strike (rough proxy when spot isn't available)
+    # TODO: median strike is a rough proxy for spot price. For accuracy, fetch
+    # real spot from market_service.get_market_data() or pass it in from the caller.
     spot = float(chain_df["strike"].median())
 
     surface = []

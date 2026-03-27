@@ -1,4 +1,10 @@
-"""Pricing API endpoints."""
+"""Pricing API endpoints.
+
+TODO: All route handlers are async but call sync CPU-bound services (MC sims,
+numerical Greeks, IV solves) directly on the event loop. For single-user/portfolio
+use this is fine. For production concurrency, wrap service calls in
+`asyncio.get_event_loop().run_in_executor(None, ...)` or use `run_in_threadpool`.
+"""
 from fastapi import APIRouter
 
 from api.app.schemas.pricing import (

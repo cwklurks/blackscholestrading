@@ -81,8 +81,8 @@ def run_backtest(ticker: str, legs: list[dict], r: float, sigma: float) -> dict:
     pnl_values = [p["pnl"] for p in pnl_series]
     daily_returns = np.diff([0.0] + pnl_values)
 
-    # Max drawdown
-    peak = pnl_values[0]
+    # Max drawdown (peak starts at 0.0 = entry value, not first day's P&L)
+    peak = 0.0
     max_dd = 0.0
     for val in pnl_values:
         if val > peak:

@@ -1,7 +1,7 @@
 """Pydantic schemas for strategy and backtest endpoints."""
 from datetime import date
 from typing import Optional
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class StrategyLeg(BaseModel):
@@ -13,8 +13,14 @@ class StrategyLeg(BaseModel):
 
 
 class SpotRange(BaseModel):
-    min: float
-    max: float
+    min: float = Field(gt=0)
+    max: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_range(self):
+        if self.min >= self.max:
+            raise ValueError("spot_range.min must be < spot_range.max")
+        return self
 
 
 class PayoffRequest(BaseModel):

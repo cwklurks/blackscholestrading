@@ -18,7 +18,15 @@ jobs:
         run: |
           cd api
           pip install -r requirements.txt
-          pip install pytest
+          pip install pytest ruff mypy
+      - name: Lint with ruff
+        run: |
+          cd api
+          ruff check .
+      - name: Type check with mypy
+        run: |
+          cd api
+          mypy . --ignore-missing-imports
       - name: Run API tests
         run: |
           cd api
@@ -31,6 +39,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
       - name: Install dependencies
         run: |
           cd web
@@ -42,4 +52,4 @@ jobs:
       - name: Run tests
         run: |
           cd web
-          npm test -- --passWithNoTests
+          npm test
