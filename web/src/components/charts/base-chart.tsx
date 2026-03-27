@@ -6,27 +6,37 @@ import type { Config, Data, Layout } from "plotly.js";
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 
 const DEFAULT_LAYOUT: Partial<Layout> = {
-  template: "plotly_dark" as unknown as Layout["template"],
   paper_bgcolor: "transparent",
   plot_bgcolor: "transparent",
   font: {
     family: "var(--font-geist-sans), Geist Sans, system-ui, sans-serif",
-    color: "hsl(0 0% 70%)",
+    color: "#8A8580",
   },
   margin: { l: 48, r: 16, t: 32, b: 40 },
   xaxis: {
-    gridcolor: "hsl(0 0% 18%)",
-    zerolinecolor: "hsl(0 0% 18%)",
+    gridcolor: "#2A2725",
+    zerolinecolor: "#2A2725",
+    tickfont: { family: "var(--font-geist-mono), Geist Mono, monospace" },
   },
   yaxis: {
-    gridcolor: "hsl(0 0% 18%)",
-    zerolinecolor: "hsl(0 0% 18%)",
+    gridcolor: "#2A2725",
+    zerolinecolor: "#2A2725",
+    tickfont: { family: "var(--font-geist-mono), Geist Mono, monospace" },
   },
 };
 
 const DEFAULT_CONFIG: Partial<Config> = {
   displayModeBar: false,
   responsive: true,
+};
+
+/** Semantic Greek colors from DESIGN.md — use in chart traces */
+export const GREEK_COLORS: Record<string, string> = {
+  delta: "#5B8DEF",
+  gamma: "#45B899",
+  vega: "#D4A017",
+  theta: "#E05252",
+  rho: "#9B8EC4",
 };
 
 function deepMergeAxis(
