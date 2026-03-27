@@ -8,6 +8,12 @@ describe("formatPrice", () => {
   it("handles zero", () => {
     expect(formatPrice(0)).toBe("$0.00");
   });
+  it("uses 4 decimals for deep-OTM prices below $0.01", () => {
+    expect(formatPrice(0.0042)).toBe("$0.0042");
+  });
+  it("uses 2 decimals at the $0.01 boundary", () => {
+    expect(formatPrice(0.01)).toBe("$0.01");
+  });
 });
 
 describe("formatGreek", () => {

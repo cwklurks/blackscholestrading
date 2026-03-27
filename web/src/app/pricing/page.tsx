@@ -6,7 +6,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SensitivityChart } from "@/components/charts/sensitivity-chart";
 import { HeatmapChart } from "@/components/charts/heatmap-chart";
 import { BaseChart, GREEK_COLORS } from "@/components/charts/base-chart";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatGreek } from "@/lib/format";
 import { AdvancedParams, type AdvancedParamsValues } from "@/components/pricing/advanced-params";
 import {
   ModelParamPanel,
@@ -292,11 +292,11 @@ export default function PricingPage() {
               </div>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
                 <ResultStat label="Price" value={priceResult.price} format={formatPrice} />
-                <ResultStat label="Delta" value={priceResult.delta} />
-                <ResultStat label="Gamma" value={priceResult.gamma} />
-                <ResultStat label="Theta" value={priceResult.theta} />
-                <ResultStat label="Vega" value={priceResult.vega} />
-                <ResultStat label="Rho" value={priceResult.rho} />
+                <ResultStat label="Delta" value={priceResult.delta} format={(v) => formatGreek("delta", v)} />
+                <ResultStat label="Gamma" value={priceResult.gamma} format={(v) => formatGreek("gamma", v)} />
+                <ResultStat label="Theta" value={priceResult.theta} format={(v) => formatGreek("theta", v)} />
+                <ResultStat label="Vega" value={priceResult.vega} format={(v) => formatGreek("vega", v)} />
+                <ResultStat label="Rho" value={priceResult.rho} format={(v) => formatGreek("rho", v)} />
               </div>
             </div>
           )}

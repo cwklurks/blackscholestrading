@@ -9,6 +9,7 @@ const GREEK_CONFIG: Record<GreekName, { decimals: number; suffix?: string }> = {
 };
 
 export function formatPrice(value: number): string {
+  if (value > 0 && value < 0.01) return `$${value.toFixed(4)}`;
   return `$${value.toFixed(2)}`;
 }
 

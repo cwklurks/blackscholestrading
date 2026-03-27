@@ -315,7 +315,7 @@ export default function BacktestPage() {
             <div className="flex min-h-[400px] items-center justify-center">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  Backtest a strategy — select a template above
+                  Configure your strategy legs and click Run Backtest
                 </p>
               </div>
             </div>
