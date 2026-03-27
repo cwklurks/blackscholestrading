@@ -1,0 +1,170 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-geist-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Trading-specific design tokens */
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-surface: var(--surface);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-delta: var(--color-delta);
+  --color-gamma: var(--color-gamma);
+  --color-vega: var(--color-vega);
+  --color-theta: var(--color-theta);
+  --color-rho: var(--color-rho);
+}
+
+:root {
+  --background: #FAF9F6;
+  --foreground: #1A1A1A;
+  --card: #F0EEEB;
+  --card-foreground: #1A1A1A;
+  --popover: #F0EEEB;
+  --popover-foreground: #1A1A1A;
+  --primary: #B8860B;
+  --primary-foreground: #FAF9F6;
+  --secondary: #E8E5E2;
+  --secondary-foreground: #1A1A1A;
+  --muted: #E8E5E2;
+  --muted-foreground: #6B6B6B;
+  --accent: #B8860B;
+  --accent-foreground: #FAF9F6;
+  --destructive: #C0392B;
+  --border: #E0DCDA;
+  --input: #E8E5E2;
+  --ring: #B8860B;
+  --chart-1: #B8860B;
+  --chart-2: #3A6FCC;
+  --chart-3: #2E8B57;
+  --chart-4: #C0392B;
+  --chart-5: #8B7EC4;
+  --radius: 0.25rem;
+  --sidebar: #F0EEEB;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #B8860B;
+  --sidebar-primary-foreground: #FAF9F6;
+  --sidebar-accent: #E8E5E2;
+  --sidebar-accent-foreground: #1A1A1A;
+  --sidebar-border: #E0DCDA;
+  --sidebar-ring: #B8860B;
+
+  /* Trading design tokens - light mode */
+  --surface: #F0EEEB;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --positive: #2E8B57;
+  --negative: #C0392B;
+
+  /* Semantic Greek colors */
+  --color-delta: #3A6FCC;
+  --color-gamma: #2D8F73;
+  --color-vega: #B8860B;
+  --color-theta: #C0392B;
+  --color-rho: #8B7EC4;
+}
+
+.dark {
+  --background: #141210;
+  --foreground: #E8E4DF;
+  --card: #1E1C1A;
+  --card-foreground: #E8E4DF;
+  --popover: #1E1C1A;
+  --popover-foreground: #E8E4DF;
+  --primary: #D4A017;
+  --primary-foreground: #141210;
+  --secondary: #252220;
+  --secondary-foreground: #E8E4DF;
+  --muted: #252220;
+  --muted-foreground: #8A8580;
+  --accent: #D4A017;
+  --accent-foreground: #141210;
+  --destructive: #E05252;
+  --border: #2A2725;
+  --input: #252220;
+  --ring: #D4A017;
+  --chart-1: #D4A017;
+  --chart-2: #5B8DEF;
+  --chart-3: #4CAF7D;
+  --chart-4: #E05252;
+  --chart-5: #9B8EC4;
+  --sidebar: #1E1C1A;
+  --sidebar-foreground: #E8E4DF;
+  --sidebar-primary: #D4A017;
+  --sidebar-primary-foreground: #141210;
+  --sidebar-accent: #252220;
+  --sidebar-accent-foreground: #E8E4DF;
+  --sidebar-border: #2A2725;
+  --sidebar-ring: #D4A017;
+
+  /* Trading design tokens - dark mode */
+  --surface: #1E1C1A;
+  --text-primary: #E8E4DF;
+  --text-secondary: #8A8580;
+  --positive: #4CAF7D;
+  --negative: #E05252;
+
+  /* Semantic Greek colors */
+  --color-delta: #5B8DEF;
+  --color-gamma: #45B899;
+  --color-vega: #D4A017;
+  --color-theta: #E05252;
+  --color-rho: #9B8EC4;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}

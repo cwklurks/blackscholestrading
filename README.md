@@ -1,45 +1,28 @@
-<div align="center">
+# Black-Scholes Pricing Engine
 
-# Quantitative Options Pricing Engine
-
-**A production-grade options pricing engine implementing Heston, GARCH, and Jump-Diffusion models with GPU-accelerated Monte Carlo simulations.**
+Full-stack options pricing workstation implementing five stochastic models. FastAPI backend with a Next.js frontend covering pricing, Greeks, volatility surfaces, strategy payoffs, and historical backtesting.
 
 [![CI](https://github.com/cwklurks/blackscholestrading/actions/workflows/ci.yml/badge.svg)](https://github.com/cwklurks/blackscholestrading/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
-[![Numba](https://img.shields.io/badge/Numba-Accelerated-00A3E0.svg)](https://numba.pydata.org/)
+[![Python](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-</div>
-
 ---
 
-## Architecture
+## Tech Stack
 
-```mermaid
-flowchart LR
-    Data["Data Provider\n(Yahoo/CSV)"] --> Engine["Pricing Engine\n(Models)"]
-    Engine --> Strategy[Strategy Layer]
-    Strategy --> UI["UI Interface\n(Streamlit)"]
-    
-    subgraph Models
-        BS[Black-Scholes]
-        Bin[Binomial Tree]
-        MC[Monte Carlo]
-    end
-    
-    Engine -.-> Models
-```
+### Backend
 
----
+- **Python 3.12** with FastAPI
+- **NumPy** and **SciPy** for numerical computing
+- **Numba** (JIT compilation) for Monte Carlo acceleration
+- **yfinance** for real-time market data
 
-## The "Why"
+### Frontend
 
-Standard Black-Scholes calculators assume constant volatility (homoscedasticity) and log-normal price distribution. However, **real markets exhibit skew, smile, and fat tails.**
-
-This engine solves for these market realities using advanced stochastic models:
-*   **Heston Model:** Incorporates stochastic volatility to capture the "volatility smile."
-*   **Bates Model:** Adds Jump-Diffusion to price sudden market shocks (tail risk).
-*   **GARCH:** Models volatility clustering often seen in financial time series.
+- **Next.js 16** with the App Router
+- **TypeScript** and **React 19**
+- **shadcn/ui** component library with **Tailwind CSS**
+- **Plotly.js** for interactive charts and surfaces
 
 ---
 
@@ -49,99 +32,90 @@ This engine solves for these market realities using advanced stochastic models:
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Volatility** | Constant | Constant | Stochastic | Stochastic (Discrete) | Stochastic |
 | **Exercise Style** | European | **American** | European | European | European |
-| **Market Jumps** | ❌ | ❌ | ❌ | ❌ | ✅ |
-| **Skew/Smile** | ❌ | ❌ | ✅ | ✅ | ✅ |
+| **Market Jumps** | No | No | No | No | Yes |
+| **Skew/Smile** | No | No | Yes | Yes | Yes |
 | **Computational Cost** | Low (Closed Form) | Medium (Iterative) | High (Monte Carlo) | High (Monte Carlo) | High (Monte Carlo) |
 
 ---
 
-## Demo
+## Features
 
-![Application Demo](preview.png)
-
-> **Note:** The application provides real-time Greeks calculation, interactive volatility surface heatmaps, and P&L scenario analysis.
-
----
-
-## Tech Stack
-
-### **Frontend**
-*   **Framework:** [Streamlit](https://streamlit.io/)
-*   **Visualization:** [Plotly](https://plotly.com/) (Interactive Heatmaps & Charts)
-
-### **Backend**
-*   **Core Logic:** Python 3.10+
-*   **Numerical Computing:** [NumPy](https://numpy.org/) & [SciPy](https://scipy.org/)
-*   **Acceleration:** [Numba](https://numba.pydata.org/) (JIT Compilation for Monte Carlo)
-
-### **Models**
-*   **Black-Scholes-Merton:** Closed-form analytical solution.
-*   **Binomial CRR:** Lattice-based pricing for American options.
-*   **Monte Carlo:** Parallelized simulations for path-dependent processes (Heston, GARCH, Bates).
+- 5 pricing models (Black-Scholes, Binomial, Heston, GARCH, Bates)
+- Analytical and numerical Greeks (delta, gamma, theta, vega, rho)
+- Implied volatility surface from live options chains
+- Multi-leg strategy payoff diagrams
+- Historical backtesting with P&L, max drawdown, Sharpe ratio
+- Real-time market data via Yahoo Finance
 
 ---
 
-## ⚡ Performance
+## Quick Start
 
-The engine uses vectorized operations (NumPy) and JIT compilation (Numba) to achieve production-grade performance.
-
-**Benchmark: Black-Scholes Call Pricing (Vectorized vs Naive Loop)**
-
-![Performance Benchmark](benchmarks/bs_performance_benchmark.png)
-
-*   **1,000 Options:** ~45x Speedup
-*   **1,000,000 Options:** ~900x Speedup
-
----
-
-## Installation & Usage
-
-### Prerequisites
-*   Python 3.10+
-*   pip
-
-### Quick Start
-
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/cwklurks/blackscholestrading.git
-    cd blackscholestrading
-    ```
-
-2.  **Install dependencies**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3.  **Run the application**
-    ```bash
-    streamlit run app.py
-    ```
-
----
-
-## Project Structure
+### Docker Compose
 
 ```bash
-blackscholestrader/
-├── app.py                  # Streamlit Application Entrypoint
-├── analytics.py            # Core Pricing Models & Analytics
-├── data_service.py         # Data Fetching (Yahoo Finance)
-├── ui_components.py        # UI Widgets & Layouts
-├── models/                 # Advanced Model Implementations
-│   ├── black_scholes.py    # Analytical Solutions
-│   ├── numerical.py        # Binomial Trees (American Options)
-│   └── simulation.py       # Monte Carlo Engines (Heston/GARCH/Bates)
-├── data/                   # Data Providers
-├── strategies/             # Option Strategy Logic
-└── tests/                  # Unit Tests
+git clone https://github.com/cwklurks/blackscholestrading.git
+cd blackscholestrading
+docker-compose up
+```
+
+API at http://localhost:8000 -- Frontend at http://localhost:3000
+
+### Manual Setup
+
+```bash
+# Backend
+cd api
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+
+# Frontend (new terminal)
+cd web
+npm install
+npm run dev
 ```
 
 ---
 
-## Contributing
+## API Endpoints
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/health` | Health check |
+| GET | `/api/models` | List available pricing models |
+| POST | `/api/price` | Price an option |
+| POST | `/api/heatmap` | Spot x volatility heatmap |
+| POST | `/api/monte-carlo` | Monte Carlo simulation |
+| POST | `/api/volatility-surface` | IV surface from live chain |
+| GET | `/api/market/{ticker}` | Stock price and history |
+| GET | `/api/chain/{ticker}` | Options chain data |
+| POST | `/api/strategy/payoff` | Multi-leg payoff diagram |
+| POST | `/api/backtest` | Historical backtest |
+
+---
+
+## Architecture
+
+```
+blackscholestrader/
+├── api/                  # FastAPI backend
+│   ├── app/
+│   │   ├── main.py       # Application entrypoint
+│   │   ├── routers/      # API route handlers
+│   │   ├── schemas/      # Pydantic request/response models
+│   │   └── services/     # Business logic layer
+│   ├── models/           # Pricing models (BS, Binomial, MC)
+│   ├── strategies/       # Option strategy and backtest logic
+│   ├── data/             # Market data providers
+│   ├── utils/            # Constants and helpers
+│   └── tests/            # Test suite
+├── web/                  # Next.js frontend
+│   └── src/
+│       ├── app/          # App Router pages
+│       └── components/   # React components
+└── docker-compose.yml    # Local development setup
+```
 
 ---
 

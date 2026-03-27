@@ -5,5 +5,5 @@ disallow_untyped_defs = false
 
 [tool.pytest.ini_options]
 norecursedirs = ["benchmarks"]
-testpaths = ["tests"]
+testpaths = ["api/tests"]
 python_files = "test_*.py"
