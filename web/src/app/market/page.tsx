@@ -63,17 +63,6 @@ function LoadingSkeleton() {
   );
 }
 
-function EmptyState() {
-  return (
-    <div className="flex h-64 items-center justify-center rounded-lg border border-dashed border-border bg-card/50">
-      <p className="text-sm text-muted-foreground">
-        Enter a ticker symbol and click &quot;Load&quot; to view market data and
-        the options chain
-      </p>
-    </div>
-  );
-}
-
 function ErrorMessage({ message }: { message: string }) {
   return (
     <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4">
@@ -232,10 +221,7 @@ export default function MarketPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Market</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Live market data, candlestick charts, and options chain
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Market</h1>
       </div>
 
       {/* Ticker Input + Load */}
@@ -263,7 +249,24 @@ export default function MarketPage() {
       {isLoading && <LoadingSkeleton />}
 
       {/* Empty state */}
-      {!isLoading && !activeTicker && !error && <EmptyState />}
+      {!isLoading && !activeTicker && !error && (
+        <div className="flex min-h-[200px] items-center justify-center">
+          <div className="text-center">
+            <p className="mb-3 text-sm text-muted-foreground">Enter a ticker to load market data</p>
+            <div className="flex gap-2 justify-center">
+              {["AAPL", "SPY", "TSLA", "NVDA"].map((t) => (
+                <button
+                  key={t}
+                  onClick={() => { setTickerInput(t); setActiveTicker(null); }}
+                  className="rounded-full border border-border px-3 py-1 font-mono text-xs text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Data */}
       {!isLoading && marketData && (
