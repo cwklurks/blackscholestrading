@@ -6,7 +6,7 @@ import type { PricingResponse, PayoffResponse } from "@/lib/types";
 import { ParamRail, DEFAULT_FORM_VALUES, type ParamRailFormValues } from "./param-rail";
 import { GreeksRow } from "./greeks-row";
 import { PayoffChart } from "@/components/charts/payoff-chart";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatPrice } from "@/lib/format";
 
 export function Workspace() {
   const [form, setForm] = useState<ParamRailFormValues>(DEFAULT_FORM_VALUES);
@@ -74,7 +74,7 @@ export function Workspace() {
   return (
     <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
       {/* Left rail - parameter inputs */}
-      <aside className="rounded-lg border border-border bg-card p-4">
+      <aside className="rounded-[var(--radius)] bg-surface p-4">
         <ParamRail
           values={form}
           onChange={setForm}
@@ -94,69 +94,57 @@ export function Workspace() {
 
         {/* Price display */}
         {pricingResult && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-baseline justify-between">
-                <span>{pricingResult.model}</span>
-                <span className="font-mono text-2xl font-bold tabular-nums text-foreground">
-                  ${pricingResult.price.toFixed(4)}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <GreeksRow data={pricingResult} />
-            </CardContent>
-          </Card>
+          <div className="border-b border-border pb-4">
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm text-muted-foreground">{pricingResult.model}</span>
+              <div className="font-mono text-4xl font-bold tabular-nums">
+                {formatPrice(pricingResult.price)}
+              </div>
+            </div>
+            <GreeksRow data={pricingResult} className="mt-4" />
+          </div>
         )}
 
         {/* Loading skeleton */}
         {isPricing && !pricingResult && (
-          <Card>
-            <CardContent className="space-y-3 py-6">
-              <div className="h-6 w-1/3 animate-pulse rounded bg-muted" />
-              <div className="grid grid-cols-5 gap-3">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex flex-col items-center gap-1">
-                    <div className="h-3 w-12 animate-pulse rounded bg-muted" />
-                    <div className="h-4 w-16 animate-pulse rounded bg-muted" />
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <div className="border-b border-border pb-4">
+            <div className="h-10 w-1/3 animate-pulse rounded bg-muted" />
+            <div className="mt-4 grid grid-cols-5 gap-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="space-y-1">
+                  <div className="h-3 w-12 animate-pulse rounded bg-muted" />
+                  <div className="h-5 w-16 animate-pulse rounded bg-muted" />
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {/* Payoff chart */}
         {payoffResult && (
-          <Card>
-            <CardContent>
-              <PayoffChart
-                prices={payoffResult.prices}
-                pnl={payoffResult.pnl}
-                breakevens={payoffResult.breakevens}
-                title={`${form.optionType === "call" ? "Call" : "Put"} P&L at Expiration`}
-                height={380}
-              />
-            </CardContent>
-          </Card>
+          <PayoffChart
+            prices={payoffResult.prices}
+            pnl={payoffResult.pnl}
+            breakevens={payoffResult.breakevens}
+            title={`${form.optionType === "call" ? "Call" : "Put"} P&L at Expiration`}
+            height={380}
+          />
         )}
 
         {/* Payoff loading skeleton */}
         {isPricing && !payoffResult && (
-          <Card>
-            <CardContent className="py-6">
-              <div className="h-[380px] w-full animate-pulse rounded bg-muted" />
-            </CardContent>
-          </Card>
+          <div className="h-[380px] w-full animate-pulse rounded bg-muted" />
         )}
 
         {/* Empty state */}
         {!pricingResult && !isPricing && !error && (
-          <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-border py-20 text-center text-muted-foreground">
-            <div>
-              <p className="text-sm font-medium">No pricing results yet</p>
-              <p className="mt-1 text-xs">
-                Configure parameters and click &quot;Price&quot; to get started.
+          <div className="flex min-h-[300px] items-center justify-center">
+            <div className="text-center">
+              <p className="font-mono text-3xl font-bold tabular-nums text-muted-foreground/30">
+                $0.00
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                Price an AAPL call to get started
               </p>
             </div>
           </div>
