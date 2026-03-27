@@ -9,6 +9,35 @@ from data_service import fetch_stock_data
 from models.black_scholes import BlackScholesModel
 
 
+def _option_value(
+    spot: float, strike: float, T: float, r: float, sigma: float,
+    is_call: bool,
+) -> float:
+    """Compute option value, falling back to intrinsic value when expired.
+
+    Args:
+        spot: Current spot price.
+        strike: Option strike price.
+        T: Time to expiry in years (can be <= 0 if expired).
+        r: Risk-free rate.
+        sigma: Volatility.
+        is_call: True for call, False for put.
+
+    Returns:
+        Option value (BS price if T > 0, intrinsic value if expired).
+    """
+    if T <= 0:
+        # Option has expired - use intrinsic value
+        if is_call:
+            return max(spot - strike, 0.0)
+        return max(strike - spot, 0.0)
+
+    bs = BlackScholesModel(spot, strike, T, r, sigma)
+    if is_call:
+        return bs.call_price()
+    return bs.put_price()
+
+
 def compute_payoff(legs: list[dict], spot_range: dict, S: float,
                    T: float, r: float, sigma: float) -> dict:
     """Compute multi-leg strategy payoff diagram."""
@@ -41,26 +70,26 @@ def run_backtest(ticker: str, legs: list[dict], r: float, sigma: float) -> dict:
             qty = leg.get("qty", 1)
             side_mult = 1 if leg["side"] == "long" else -1
 
-            # Compute T_remaining from expiry date and current date
+            # Compute T_remaining for today and yesterday independently
             expiry_str = leg.get("expiry")
             if expiry_str:
                 expiry_date = date.fromisoformat(expiry_str)
-                current_date_str = dates[i]
-                current_date = date.fromisoformat(current_date_str)
-                T_remaining = max(0.001, (expiry_date - current_date).days / 365)
+                current_date = date.fromisoformat(dates[i])
+                yesterday_date = date.fromisoformat(dates[i - 1])
+                T_remaining = (expiry_date - current_date).days / 365
+                T_remaining_yesterday = (expiry_date - yesterday_date).days / 365
             else:
-                T_remaining = max(0.001, leg.get("T_remaining", 0.0833))
+                T_remaining = leg.get("T_remaining", 0.0833)
+                T_remaining_yesterday = T_remaining
 
-            # Value today vs yesterday
-            bs_today = BlackScholesModel(closes[i], strike, T_remaining, r, sigma)
-            bs_yesterday = BlackScholesModel(closes[i - 1], strike, T_remaining, r, sigma)
-
-            if leg["type"] == "call":
-                val_today = bs_today.call_price()
-                val_yesterday = bs_yesterday.call_price()
-            else:
-                val_today = bs_today.put_price()
-                val_yesterday = bs_yesterday.put_price()
+            # Value today vs yesterday (use intrinsic if expired)
+            is_call = leg["type"] == "call"
+            val_today = _option_value(
+                closes[i], strike, T_remaining, r, sigma, is_call,
+            )
+            val_yesterday = _option_value(
+                closes[i - 1], strike, T_remaining_yesterday, r, sigma, is_call,
+            )
 
             day_pnl += side_mult * qty * (val_today - val_yesterday)
 
