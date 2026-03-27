@@ -61,7 +61,8 @@ def compute_volatility_surface(
                 if market_price and market_price > 0:
                     try:
                         iv = implied_volatility(market_price, spot, strike, T, r)
-                        valid_cells += 1
+                        if iv is not None:
+                            valid_cells += 1
                     except Exception:
                         iv = None
 

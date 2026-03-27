@@ -174,10 +174,29 @@ class TestImpliedVolatility:
             f"Expected ~{target_sigma}, got {recovered}"
         )
 
-    def test_zero_price_returns_low_vol(self):
+    def test_zero_price_returns_none(self):
+        """A zero option price cannot be matched by any vol - solver should report failure."""
         recovered = implied_volatility(0.0, S, K, T, R, option_type="call")
-        assert math.isfinite(recovered), "IV for zero price should be finite"
-        assert recovered < 0.05, f"IV for zero price should be very low, got {recovered}"
+        assert recovered is None, f"IV for zero price should be None, got {recovered}"
+
+    def test_unreachable_price_returns_none(self):
+        """Price above spot is unreachable for any vol - solver should report failure."""
+        recovered = implied_volatility(150.0, S=100, K=100, T=0.5, r=0.05, option_type="call")
+        assert recovered is None, f"IV for unreachable price should be None, got {recovered}"
+
+    def test_reasonable_option_returns_valid_float(self):
+        """A sensible ATM option with a real BS price should round-trip to a valid IV."""
+        from models.black_scholes import BlackScholesModel
+
+        target_sigma = 0.20
+        model = BlackScholesModel(S, K, T, R, target_sigma)
+        price = model.call_price()
+        recovered = implied_volatility(price, S, K, T, R, option_type="call")
+        assert recovered is not None, "IV should not be None for a reasonable option"
+        assert isinstance(recovered, float), f"IV should be a float, got {type(recovered)}"
+        assert abs(recovered - target_sigma) < 0.01, (
+            f"Expected ~{target_sigma}, got {recovered}"
+        )
 
 
 # ---------------------------------------------------------------------------
