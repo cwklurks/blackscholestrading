@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/", label: "Workspace", icon: LayoutDashboard },
   { href: "/pricing", label: "Pricing", icon: Calculator },
   { href: "/volatility", label: "Volatility", icon: Activity },
   { href: "/strategies", label: "Strategies", icon: Layers },
@@ -24,13 +24,16 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 flex w-14 flex-col border-r border-border bg-surface lg:w-60">
+    <aside
+      aria-label="Main navigation"
+      className="fixed inset-y-0 left-0 z-30 flex w-14 flex-col border-r border-border bg-surface lg:w-60"
+    >
       <div className="flex h-14 items-center border-b border-border px-3 lg:px-5">
-        <span className="hidden text-sm font-semibold tracking-tight text-foreground lg:block">
-          Black-Scholes
+        <span className="hidden font-mono text-sm font-semibold tracking-tight text-primary lg:block">
+          BST
         </span>
-        <span className="block text-sm font-bold text-foreground lg:hidden">
-          BS
+        <span className="block font-mono text-sm font-bold text-primary lg:hidden">
+          B
         </span>
       </div>
 
@@ -44,10 +47,10 @@ export function Sidebar() {
               key={href}
               href={href}
               className={[
-                "group flex items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors",
+                "group flex items-center gap-3 rounded-[var(--radius)] px-2.5 py-2 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-accent/10 hover:text-foreground",
               ].join(" ")}
             >
               <Icon className="h-4 w-4 shrink-0" />
