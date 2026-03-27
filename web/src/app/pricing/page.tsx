@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SensitivityChart } from "@/components/charts/sensitivity-chart";
 import { HeatmapChart } from "@/components/charts/heatmap-chart";
-import { BaseChart } from "@/components/charts/base-chart";
+import { BaseChart, GREEK_COLORS } from "@/components/charts/base-chart";
+import { formatPrice } from "@/lib/format";
 import { AdvancedParams, type AdvancedParamsValues } from "@/components/pricing/advanced-params";
 import {
   ModelParamPanel,
@@ -33,17 +34,6 @@ const MODELS = [
 ] as const;
 
 type Model = (typeof MODELS)[number];
-
-// ---------------------------------------------------------------------------
-// Greek colors
-// ---------------------------------------------------------------------------
-
-const GREEK_COLORS: Record<string, string> = {
-  delta: "#3b82f6",
-  gamma: "#8b5cf6",
-  vega: "#f59e0b",
-  theta: "#ef4444",
-};
 
 // ---------------------------------------------------------------------------
 // Sensitivity data shape
@@ -192,19 +182,16 @@ export default function PricingPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Pricing</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Full sensitivity analysis with advanced parameters
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Pricing</h1>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* ---------------------------------------------------------------- */}
         {/* Left rail - Parameters                                           */}
         {/* ---------------------------------------------------------------- */}
-        <aside className="w-full shrink-0 space-y-4 lg:w-72">
+        <aside className="w-full shrink-0 space-y-4 rounded-[var(--radius)] bg-surface p-4 lg:w-72">
           {/* Model selector */}
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="space-y-1.5">
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
               Model
             </label>
@@ -222,7 +209,7 @@ export default function PricingPage() {
           </div>
 
           {/* Basic params */}
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="space-y-3">
             <span className="mb-3 block text-sm font-medium text-foreground">
               Basic Parameters
             </span>
@@ -299,12 +286,12 @@ export default function PricingPage() {
         <div className="min-w-0 flex-1 space-y-6">
           {/* Price result card */}
           {priceResult && (
-            <div className="rounded-lg border border-border bg-card p-4">
+            <div className="border-b border-border pb-4">
               <div className="mb-3 text-sm font-medium text-muted-foreground">
                 {priceResult.model} - {optionType.toUpperCase()}
               </div>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-                <ResultStat label="Price" value={priceResult.price} />
+                <ResultStat label="Price" value={priceResult.price} format={formatPrice} />
                 <ResultStat label="Delta" value={priceResult.delta} />
                 <ResultStat label="Gamma" value={priceResult.gamma} />
                 <ResultStat label="Theta" value={priceResult.theta} />
@@ -316,7 +303,7 @@ export default function PricingPage() {
 
           {/* Sensitivity charts with tabs */}
           {sensitivity && (
-            <div className="rounded-lg border border-border bg-card p-4">
+            <div className="border-b border-border pb-6">
               <Tabs defaultValue={0} value={activeGreek} onValueChange={setActiveGreek}>
                 <TabsList>
                   {greekTabs.map((name, idx) => (
@@ -348,7 +335,7 @@ export default function PricingPage() {
 
           {/* Heatmap */}
           {heatmap && (
-            <div className="rounded-lg border border-border bg-card p-4">
+            <div className="border-b border-border pb-6">
               <HeatmapChart
                 spotValues={heatmap.spot_values}
                 volValues={heatmap.vol_values}
@@ -365,7 +352,7 @@ export default function PricingPage() {
 
           {/* MC Histogram - only for MC models */}
           {mcResult && MC_MODELS.has(model) && (
-            <div className="rounded-lg border border-border bg-card p-4">
+            <div className="border-b border-border pb-6">
               <div className="mb-3 text-sm font-medium text-foreground">
                 Monte Carlo Distribution
               </div>
@@ -392,7 +379,7 @@ export default function PricingPage() {
                     type: "histogram",
                     x: mcResult.terminal_prices,
                     nbinsx: 60,
-                    marker: { color: "#3b82f680", line: { color: "#3b82f6", width: 1 } },
+                    marker: { color: `${GREEK_COLORS.delta}80`, line: { color: GREEK_COLORS.delta, width: 1 } },
                     name: "Terminal Prices",
                   },
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -410,7 +397,7 @@ export default function PricingPage() {
                       y0: 0,
                       y1: 1,
                       yref: "paper",
-                      line: { color: "#ef4444", width: 2, dash: "dash" },
+                      line: { color: GREEK_COLORS.theta, width: 2, dash: "dash" },
                     },
                   ],
                   annotations: [
@@ -420,7 +407,7 @@ export default function PricingPage() {
                       yref: "paper",
                       text: `K=${strike}`,
                       showarrow: false,
-                      font: { color: "#ef4444", size: 11 },
+                      font: { color: GREEK_COLORS.theta, size: 11 },
                       yanchor: "bottom",
                     },
                   ],
@@ -432,11 +419,13 @@ export default function PricingPage() {
 
           {/* Empty state */}
           {!priceResult && !loading && (
-            <div className="flex min-h-[400px] items-center justify-center rounded-lg border border-dashed border-border bg-card/50">
+            <div className="flex min-h-[400px] items-center justify-center">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Configure parameters and click &quot;Price Option&quot; to
-                  generate analysis
+                <p className="font-mono text-3xl font-bold tabular-nums text-muted-foreground/30">
+                  $0.00
+                </p>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Configure parameters and press Enter or click Price Option
                 </p>
               </div>
             </div>
@@ -451,12 +440,12 @@ export default function PricingPage() {
 // ResultStat - small stat display
 // ---------------------------------------------------------------------------
 
-function ResultStat({ label, value }: { label: string; value: number }) {
+function ResultStat({ label, value, format }: { label: string; value: number; format?: (v: number) => string }) {
   return (
     <div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      <div className="text-lg font-semibold tabular-nums text-foreground">
-        {value.toFixed(4)}
+      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="font-mono text-lg font-medium tabular-nums text-foreground">
+        {format ? format(value) : value.toFixed(4)}
       </div>
     </div>
   );
