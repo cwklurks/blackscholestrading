@@ -160,10 +160,12 @@ function LoadingSkeleton() {
 
 function EmptyState() {
   return (
-    <div className="flex h-64 items-center justify-center rounded-lg border border-border bg-surface">
-      <p className="text-text-secondary">
-        Enter a ticker and click Load Surface
-      </p>
+    <div className="flex h-64 items-center justify-center">
+      <div className="text-center">
+        <p className="text-sm text-muted-foreground">
+          Load a vol surface — try <span className="font-mono font-medium text-primary">AAPL</span> or <span className="font-mono font-medium text-primary">SPY</span>
+        </p>
+      </div>
     </div>
   );
 }
@@ -208,10 +210,7 @@ export default function VolatilityPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Volatility</h1>
-        <p className="mt-1 text-text-secondary">
-          Implied volatility surface, smile curves, and term structure
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Volatility</h1>
       </div>
 
       {/* Ticker Input + Fetch */}
@@ -243,7 +242,7 @@ export default function VolatilityPage() {
 
           {/* 3D Volatility Surface */}
           {surfaceMatrix && (
-            <div className="rounded-lg border border-border bg-surface p-4">
+            <div className="border-b border-border pb-6">
               <SurfaceChart
                 strikes={surfaceMatrix.strikes}
                 expiries={surfaceMatrix.expiries}
@@ -255,7 +254,7 @@ export default function VolatilityPage() {
 
           {/* Smile Curves */}
           {data.smile_data && Object.keys(data.smile_data).length > 0 && (
-            <div className="rounded-lg border border-border bg-surface p-4">
+            <div>
               <SmileChart smileData={data.smile_data} />
             </div>
           )}
