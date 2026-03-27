@@ -110,15 +110,18 @@ def run_backtest(ticker: str, legs: list[dict], r: float, sigma: float) -> dict:
     pnl_values = [p["pnl"] for p in pnl_series]
     daily_returns = np.diff([0.0] + pnl_values)
 
-    # Max drawdown (peak starts at 0.0 = entry value, not first day's P&L)
+    # Max drawdown as fraction of peak (peak starts at 0.0 = entry value)
     peak = 0.0
     max_dd = 0.0
+    peak_at_max_dd = 0.0
     for val in pnl_values:
         if val > peak:
             peak = val
         dd = peak - val
         if dd > max_dd:
             max_dd = dd
+            peak_at_max_dd = peak
+    max_dd_pct = (max_dd / peak_at_max_dd) if peak_at_max_dd > 0 else 0.0
 
     # Sharpe ratio (annualized)
     if len(daily_returns) > 1 and np.std(daily_returns) > 0:
@@ -133,7 +136,7 @@ def run_backtest(ticker: str, legs: list[dict], r: float, sigma: float) -> dict:
     return {
         "pnl_series": pnl_series,
         "total_pnl": round(total_pnl, 4),
-        "max_drawdown": round(max_dd, 4),
+        "max_drawdown": round(max_dd_pct, 4),
         "sharpe_ratio": round(sharpe, 4) if sharpe is not None else None,
         "win_rate": round(win_rate, 4),
     }
