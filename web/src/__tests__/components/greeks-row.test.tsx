@@ -14,39 +14,39 @@ const mockData: PricingResponse = {
 };
 
 describe("GreeksRow", () => {
-  it("renders all 5 Greek labels", () => {
+  it("renders all 5 Greek labels in uppercase", () => {
     render(<GreeksRow data={mockData} />);
 
-    expect(screen.getByText("Delta")).toBeInTheDocument();
-    expect(screen.getByText("Gamma")).toBeInTheDocument();
-    expect(screen.getByText("Vega")).toBeInTheDocument();
-    expect(screen.getByText("Theta")).toBeInTheDocument();
-    expect(screen.getByText("Rho")).toBeInTheDocument();
+    expect(screen.getByText("DELTA")).toBeInTheDocument();
+    expect(screen.getByText("GAMMA")).toBeInTheDocument();
+    expect(screen.getByText("VEGA")).toBeInTheDocument();
+    expect(screen.getByText("THETA")).toBeInTheDocument();
+    expect(screen.getByText("RHO")).toBeInTheDocument();
   });
 
-  it("formats delta to 4 decimal places", () => {
+  it("formats delta to 3 decimal places", () => {
     render(<GreeksRow data={mockData} />);
-    expect(screen.getByText("0.5977")).toBeInTheDocument();
+    expect(screen.getByText("0.598")).toBeInTheDocument();
   });
 
-  it("formats gamma to 6 decimal places", () => {
+  it("formats gamma to 3 decimal places", () => {
     render(<GreeksRow data={mockData} />);
-    expect(screen.getByText("0.027123")).toBeInTheDocument();
+    expect(screen.getByText("0.027")).toBeInTheDocument();
   });
 
-  it("formats vega to 4 decimal places", () => {
+  it("formats vega to 2 decimal places", () => {
     render(<GreeksRow data={mockData} />);
-    expect(screen.getByText("0.1894")).toBeInTheDocument();
+    expect(screen.getByText("0.19")).toBeInTheDocument();
   });
 
-  it("displays negative theta with negative sign", () => {
+  it("formats theta with /d suffix", () => {
     render(<GreeksRow data={mockData} />);
-    expect(screen.getByText("-0.0521")).toBeInTheDocument();
+    expect(screen.getByText("-0.052/d")).toBeInTheDocument();
   });
 
-  it("formats rho to 4 decimal places", () => {
+  it("formats rho to 2 decimal places", () => {
     render(<GreeksRow data={mockData} />);
-    expect(screen.getByText("0.2234")).toBeInTheDocument();
+    expect(screen.getByText("0.22")).toBeInTheDocument();
   });
 
   it("renders placeholder dashes when data is null", () => {
@@ -64,25 +64,25 @@ describe("GreeksRow", () => {
     expect(root.className).toContain("my-custom-class");
   });
 
-  it("applies positive color class for positive values", () => {
+  it("applies semantic color class for delta", () => {
     render(<GreeksRow data={mockData} />);
-    const deltaValue = screen.getByText("0.5977");
-    expect(deltaValue.className).toContain("text-positive");
+    const deltaValue = screen.getByText("0.598");
+    expect(deltaValue.className).toContain("text-delta");
   });
 
-  it("applies negative color class for negative values", () => {
+  it("applies semantic color class for theta", () => {
     render(<GreeksRow data={mockData} />);
-    const thetaValue = screen.getByText("-0.0521");
-    expect(thetaValue.className).toContain("text-negative");
+    const thetaValue = screen.getByText("-0.052/d");
+    expect(thetaValue.className).toContain("text-theta");
   });
 
-  it("applies muted color class for zero values", () => {
+  it("shows zero values with formatGreek precision", () => {
     const zeroData: PricingResponse = {
       ...mockData,
       delta: 0,
     };
     render(<GreeksRow data={zeroData} />);
-    const deltaValue = screen.getByText("0.0000");
-    expect(deltaValue.className).toContain("text-muted-foreground");
+    const deltaValue = screen.getByText("0.000");
+    expect(deltaValue.className).toContain("text-delta");
   });
 });
