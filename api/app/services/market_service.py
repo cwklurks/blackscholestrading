@@ -58,7 +58,7 @@ def get_market_data(ticker: str) -> dict:
         "price": price,
         "history": history,
         "historical_vol": float(hv),
-        "fetched_at": datetime.now(UTC).isoformat(),
+        "fetched_at": fetched_at,
     }
 
 
