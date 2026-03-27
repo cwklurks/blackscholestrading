@@ -92,19 +92,16 @@ export default function BacktestPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Backtest</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Historical strategy backtesting with P&L analysis
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Backtest</h1>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* -------------------------------------------------------------- */}
         {/* Left rail - Config                                              */}
         {/* -------------------------------------------------------------- */}
-        <aside className="w-full shrink-0 space-y-4 lg:w-80">
+        <aside className="w-full shrink-0 space-y-4 rounded-[var(--radius)] bg-surface p-4 lg:w-80">
           {/* Ticker */}
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="space-y-1.5">
             <span className="mb-3 block text-sm font-medium text-foreground">
               Ticker
             </span>
@@ -118,7 +115,7 @@ export default function BacktestPage() {
           </div>
 
           {/* Legs */}
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="space-y-3">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">Legs</span>
               <Button variant="outline" size="xs" onClick={handleAddLeg}>
@@ -146,7 +143,7 @@ export default function BacktestPage() {
           </div>
 
           {/* Parameters */}
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="space-y-3">
             <span className="mb-3 block text-sm font-medium text-foreground">
               Parameters
             </span>
@@ -198,11 +195,11 @@ export default function BacktestPage() {
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-20 animate-pulse rounded-lg border border-border bg-card"
+                    className="h-20 animate-pulse rounded-[var(--radius)] bg-muted"
                   />
                 ))}
               </div>
-              <div className="h-[440px] animate-pulse rounded-lg border border-border bg-card" />
+              <div className="h-[440px] animate-pulse rounded-[var(--radius)] bg-muted" />
             </div>
           )}
 
@@ -216,8 +213,8 @@ export default function BacktestPage() {
                   value={formatCurrency(result.total_pnl)}
                   colorClass={
                     result.total_pnl >= 0
-                      ? "text-emerald-500"
-                      : "text-red-500"
+                      ? "text-positive"
+                      : "text-negative"
                   }
                 />
                 <MetricCard
@@ -229,30 +226,30 @@ export default function BacktestPage() {
                   }
                   colorClass={
                     result.sharpe_ratio !== null && result.sharpe_ratio >= 1
-                      ? "text-emerald-500"
+                      ? "text-positive"
                       : result.sharpe_ratio !== null && result.sharpe_ratio >= 0
-                        ? "text-yellow-500"
-                        : "text-red-500"
+                        ? "text-primary"
+                        : "text-negative"
                   }
                 />
                 <MetricCard
                   label="Max Drawdown"
                   value={formatPercent(result.max_drawdown)}
-                  colorClass="text-red-500"
+                  colorClass="text-negative"
                 />
                 <MetricCard
                   label="Win Rate"
                   value={formatPercent(result.win_rate)}
                   colorClass={
                     result.win_rate >= 0.5
-                      ? "text-emerald-500"
-                      : "text-red-500"
+                      ? "text-positive"
+                      : "text-negative"
                   }
                 />
               </div>
 
               {/* P&L Chart */}
-              <div className="rounded-lg border border-border bg-card p-4">
+              <div className="border-b border-border pb-6">
                 <BaseChart
                   data={[
                     {
@@ -260,8 +257,8 @@ export default function BacktestPage() {
                       y: result.pnl_series.map((p) => p.pnl),
                       type: "scatter",
                       mode: "lines+markers",
-                      marker: { size: 4, color: "hsl(160, 60%, 45%)" },
-                      line: { color: "hsl(160, 60%, 45%)", width: 2 },
+                      marker: { size: 4, color: "#4CAF7D" },
+                      line: { color: "#4CAF7D", width: 2 },
                       name: "Cumulative P&L",
                       hovertemplate:
                         "Date: %{x}<br>P&L: $%{y:.2f}<extra></extra>",
@@ -277,7 +274,7 @@ export default function BacktestPage() {
               </div>
 
               {/* Strategy summary */}
-              <div className="rounded-lg border border-border bg-card p-3">
+              <div className="border-b border-border pb-4">
                 <span className="mb-2 block text-sm font-medium text-foreground">
                   Strategy Summary
                 </span>
@@ -296,8 +293,8 @@ export default function BacktestPage() {
                       <span
                         className={`inline-flex h-5 items-center rounded px-1.5 text-xs font-medium ${
                           leg.side === "long"
-                            ? "bg-emerald-500/10 text-emerald-500"
-                            : "bg-red-500/10 text-red-500"
+                            ? "bg-positive/10 text-positive"
+                            : "bg-negative/10 text-negative"
                         }`}
                       >
                         {leg.side.toUpperCase()}
@@ -315,11 +312,10 @@ export default function BacktestPage() {
 
           {/* Empty state */}
           {!result && !loading && (
-            <div className="flex min-h-[400px] items-center justify-center rounded-lg border border-dashed border-border bg-card/50">
+            <div className="flex min-h-[400px] items-center justify-center">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  Configure your strategy legs and click &quot;Run
-                  Backtest&quot; to see results
+                  Backtest a strategy — select a template above
                 </p>
               </div>
             </div>
@@ -459,7 +455,7 @@ function MetricCard({
   colorClass: string;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
+    <div className="space-y-1">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div
         className={`mt-1 text-lg font-semibold font-mono tabular-nums ${colorClass}`}

@@ -118,10 +118,7 @@ export default function StrategiesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Strategies</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Multi-leg strategy builder with live payoff diagram
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Strategies</h1>
       </div>
 
       {/* Template Picker */}
@@ -131,12 +128,12 @@ export default function StrategiesPage() {
         {/* ---------------------------------------------------------------- */}
         {/* Left rail - Leg Builder + Parameters                             */}
         {/* ---------------------------------------------------------------- */}
-        <aside className="w-full shrink-0 space-y-4 lg:w-80">
+        <aside className="w-full shrink-0 space-y-4 rounded-[var(--radius)] bg-surface p-4 lg:w-80">
           {/* Leg Builder */}
           <LegBuilder legs={legs} onChange={handleLegsChange} />
 
           {/* Market Parameters */}
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="space-y-3">
             <span className="mb-3 block text-sm font-medium text-foreground">
               Market Parameters
             </span>
@@ -176,7 +173,7 @@ export default function StrategiesPage() {
           </div>
 
           {/* Spot Range */}
-          <div className="rounded-lg border border-border bg-card p-3">
+          <div className="space-y-3">
             <span className="mb-3 block text-sm font-medium text-foreground">
               Chart Range
             </span>
@@ -235,7 +232,7 @@ export default function StrategiesPage() {
                   positive={false}
                 />
                 <div className="col-span-2 sm:col-span-1">
-                  <div className="rounded-lg border border-border bg-card p-3">
+                  <div className="space-y-1">
                     <div className="text-xs text-muted-foreground">
                       Breakevens
                     </div>
@@ -251,7 +248,7 @@ export default function StrategiesPage() {
               </div>
 
               {/* Chart */}
-              <div className="rounded-lg border border-border bg-card p-4">
+              <div className="border-b border-border pb-6">
                 <PayoffChart
                   prices={payoff.prices}
                   pnl={payoff.pnl}
@@ -262,7 +259,7 @@ export default function StrategiesPage() {
               </div>
 
               {/* Legs summary */}
-              <div className="rounded-lg border border-border bg-card p-3">
+              <div className="border-b border-border pb-4">
                 <span className="mb-2 block text-sm font-medium text-foreground">
                   Strategy Summary
                 </span>
@@ -275,8 +272,8 @@ export default function StrategiesPage() {
                       <span
                         className={`inline-flex h-5 items-center rounded px-1.5 text-xs font-medium ${
                           leg.side === "long"
-                            ? "bg-emerald-500/10 text-emerald-500"
-                            : "bg-red-500/10 text-red-500"
+                            ? "bg-positive/10 text-positive"
+                            : "bg-negative/10 text-negative"
                         }`}
                       >
                         {leg.side.toUpperCase()}
@@ -294,11 +291,10 @@ export default function StrategiesPage() {
 
           {/* Empty state */}
           {!payoff && !loading && (
-            <div className="flex min-h-[400px] items-center justify-center rounded-lg border border-dashed border-border bg-card/50">
+            <div className="flex min-h-[400px] items-center justify-center">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">
-                  Select a template or build legs manually, then click
-                  &quot;Calculate Payoff&quot;
+                  Build a strategy — start with a call spread
                 </p>
               </div>
             </div>
@@ -325,11 +321,11 @@ function StatCard({
   const displayValue =
     value === null ? "Unlimited" : `$${Math.abs(value).toFixed(2)}`;
   const colorClass = positive
-    ? "text-emerald-500"
-    : "text-red-500";
+    ? "text-positive"
+    : "text-negative";
 
   return (
-    <div className="rounded-lg border border-border bg-card p-3">
+    <div className="space-y-1">
       <div className="text-xs text-muted-foreground">{label}</div>
       <div className={`mt-1 text-lg font-semibold tabular-nums ${colorClass}`}>
         {displayValue}
