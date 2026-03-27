@@ -1,26 +1,21 @@
 "use client";
 
 import type { PricingResponse } from "@/lib/types";
+import { formatGreek } from "@/lib/format";
 
 interface GreekDef {
   label: string;
   key: keyof Pick<PricingResponse, "delta" | "gamma" | "vega" | "theta" | "rho">;
-  decimals: number;
+  colorClass: string;
 }
 
 const GREEKS: GreekDef[] = [
-  { label: "Delta", key: "delta", decimals: 4 },
-  { label: "Gamma", key: "gamma", decimals: 6 },
-  { label: "Vega", key: "vega", decimals: 4 },
-  { label: "Theta", key: "theta", decimals: 4 },
-  { label: "Rho", key: "rho", decimals: 4 },
+  { label: "DELTA", key: "delta", colorClass: "text-delta" },
+  { label: "GAMMA", key: "gamma", colorClass: "text-gamma" },
+  { label: "THETA", key: "theta", colorClass: "text-theta" },
+  { label: "VEGA", key: "vega", colorClass: "text-vega" },
+  { label: "RHO", key: "rho", colorClass: "text-rho" },
 ];
-
-function signColor(value: number): string {
-  if (value > 0) return "text-positive";
-  if (value < 0) return "text-negative";
-  return "text-muted-foreground";
-}
 
 interface GreeksRowProps {
   data: PricingResponse | null;
@@ -31,28 +26,28 @@ export function GreeksRow({ data, className }: GreeksRowProps) {
   return (
     <div
       className={[
-        "grid grid-cols-5 gap-3 rounded-lg border border-border bg-card p-3",
+        "grid grid-cols-5 gap-4",
         className,
       ]
         .filter(Boolean)
         .join(" ")}
     >
-      {GREEKS.map(({ label, key, decimals }) => {
+      {GREEKS.map(({ label, key, colorClass }) => {
         const value = data ? data[key] : null;
 
         return (
-          <div key={key} className="flex flex-col items-center gap-1">
-            <span className="text-xs font-medium text-muted-foreground">
+          <div key={key}>
+            <div className={`text-xs font-medium uppercase tracking-wider ${colorClass}`}>
               {label}
-            </span>
+            </div>
             {value !== null && value !== undefined ? (
-              <span className={`font-mono text-sm ${signColor(value)}`}>
-                {value.toFixed(decimals)}
-              </span>
+              <div className={`font-mono text-base font-medium tabular-nums ${colorClass}`}>
+                {formatGreek(key, value)}
+              </div>
             ) : (
-              <span className="font-mono text-sm text-muted-foreground">
+              <div className="font-mono text-base text-muted-foreground tabular-nums">
                 --
-              </span>
+              </div>
             )}
           </div>
         );
