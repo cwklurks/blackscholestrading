@@ -82,6 +82,7 @@ def get_options_chain(ticker: str) -> dict:
             "iv": _safe_float(row.get("impliedVolatility")) or None,
             "volume": _safe_float(row.get("volume")) or None,
             "oi": _safe_float(row.get("openInterest")) or None,
+            "expiration": str(row.get("expiration")) if row.get("expiration") is not None else None,
         }
         option_type = str(row.get("type", "")).lower()
         if option_type == "call":

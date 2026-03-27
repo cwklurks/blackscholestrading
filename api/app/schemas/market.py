@@ -25,6 +25,7 @@ class ChainRow(BaseModel):
     iv: Optional[float] = None
     volume: Optional[float] = None
     oi: Optional[float] = None
+    expiration: Optional[str] = None
 
 
 class ChainResponse(BaseModel):
