@@ -6,3 +6,4 @@ scipy
 pandas
 numba
 yfinance
+pyarrow
