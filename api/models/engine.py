@@ -25,7 +25,7 @@ from models.simulation import (
 from utils.constants import EPS_TIME, EPS_VOL, clamp_inputs
 
 
-def implied_volatility(option_price: float, S: float, K: float, T: float, r: float, q: float = 0.0, borrow_cost: float = 0.0, option_type: str = "call") -> float:
+def implied_volatility(option_price: float, S: float, K: float, T: float, r: float, q: float = 0.0, borrow_cost: float = 0.0, option_type: str = "call") -> Optional[float]:
     T, _ = clamp_inputs(T, EPS_VOL)
 
     def objective(sigma: float) -> float:
@@ -36,6 +36,16 @@ def implied_volatility(option_price: float, S: float, K: float, T: float, r: flo
         return abs(model.put_price() - option_price)
 
     result = minimize_scalar(objective, bounds=(0.001, 5), method="bounded")
+
+    # Check convergence quality: if the residual is large relative to the
+    # option price (or exceeds an absolute floor), the solver hit a boundary
+    # and the IV is unreliable.
+    residual = float(result.fun)
+    abs_threshold = 0.50
+    rel_threshold = 0.10 * max(option_price, 1e-12)
+    if residual > max(abs_threshold, rel_threshold):
+        return None
+
     return float(result.x)
 
 

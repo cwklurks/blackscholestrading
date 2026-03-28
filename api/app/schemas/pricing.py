@@ -14,7 +14,7 @@ class PricingRequest(BaseModel):
     S: float = Field(gt=0, description="Spot price")
     K: float = Field(gt=0, description="Strike price")
     T: float = Field(ge=0, description="Time to expiry in years")
-    r: float = Field(description="Risk-free rate")
+    r: float = Field(ge=-0.5, le=2.0, description="Risk-free rate")
     sigma: float = Field(ge=0, le=5.0, description="Volatility")
     q: float = Field(default=0.0, description="Dividend yield")
     borrow_cost: float = Field(default=0.0, description="Borrow cost")
@@ -69,7 +69,7 @@ class PricingResponse(BaseModel):
 class HeatmapRequest(BaseModel):
     K: float = Field(gt=0)
     T: float = Field(ge=0)
-    r: float
+    r: float = Field(ge=-0.5, le=2.0)
     q: float = 0.0
     borrow_cost: float = 0.0
     spot_range: RangeSpec
@@ -104,7 +104,7 @@ class MonteCarloRequest(BaseModel):
     S: float = Field(gt=0)
     K: float = Field(gt=0)
     T: float = Field(ge=0)
-    r: float
+    r: float = Field(ge=-0.5, le=2.0)
     sigma: float = Field(ge=0)
     paths: int = Field(ge=100, le=50000, default=10000)
     option_type: str = Field(default="call", pattern="^(call|put)$")
@@ -123,7 +123,7 @@ class VolSurfaceRequest(BaseModel):
     ticker: str = Field(min_length=1, max_length=10, pattern=r"^[A-Za-z0-9.\-\^]+$")
     strikes: Optional[list[float]] = Field(default=None, max_length=200)
     expirations: Optional[list[str]] = Field(default=None, max_length=20)
-    r: float = Field(default=0.05, description="Risk-free rate for IV computation")
+    r: float = Field(default=0.05, ge=-0.5, le=2.0, description="Risk-free rate for IV computation")
 
 
 class VolSurfacePoint(BaseModel):

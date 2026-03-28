@@ -88,7 +88,7 @@ def heston_mc_price(
     vol_of_vol: float = 0.3,
     paths: int = 4000,
     steps: int = 120,
-    seed: int = 42
+    seed: Optional[int] = None
 ) -> float:
     """Calculates option price using Heston Stochastic Volatility model.
 
@@ -108,7 +108,7 @@ def heston_mc_price(
         vol_of_vol (float, optional): Volatility of volatility. Defaults to 0.3.
         paths (int, optional): Number of MC paths. Defaults to 4000.
         steps (int, optional): Number of time steps. Defaults to 120.
-        seed (int, optional): Random seed. Defaults to 42.
+        seed (int, optional): Random seed. Defaults to None (random each call).
 
     Returns:
         float: Option price.
@@ -195,7 +195,7 @@ def garch_mc_price(
     alpha1: float = 0.08,
     beta1: float = 0.9,
     paths: int = 4000,
-    seed: int = 42
+    seed: Optional[int] = None
 ) -> float:
     """GARCH(1,1) volatility model with Numba acceleration.
 
@@ -212,7 +212,7 @@ def garch_mc_price(
         alpha1 (float, optional): GARCH parameter. Defaults to 0.08.
         beta1 (float, optional): GARCH parameter. Defaults to 0.9.
         paths (int, optional): Number of MC paths. Defaults to 4000.
-        seed (int, optional): Random seed. Defaults to 42.
+        seed (int, optional): Random seed. Defaults to None (random each call).
 
     Returns:
         float: Option price.
@@ -308,7 +308,7 @@ def bates_jump_diffusion_mc_price(
     delta_jump: float = 0.2,
     paths: int = 4000,
     steps: int = 120,
-    seed: int = 42
+    seed: Optional[int] = None
 ) -> float:
     """Bates jump-diffusion model with Numba acceleration.
 
@@ -326,7 +326,7 @@ def bates_jump_diffusion_mc_price(
         delta_jump (float, optional): Jump volatility. Defaults to 0.2.
         paths (int, optional): Number of MC paths. Defaults to 4000.
         steps (int, optional): Number of time steps. Defaults to 120.
-        seed (int, optional): Random seed. Defaults to 42.
+        seed (int, optional): Random seed. Defaults to None (random each call).
 
     Returns:
         float: Option price.
@@ -353,7 +353,7 @@ def monte_carlo_option_price(
     sigma: float,
     num_simulations: int = 10000,
     option_type: str = "call",
-    seed: int = 42,
+    seed: Optional[int] = None,
     q: float = 0.0,
     borrow_cost: float = 0.0,
 ) -> Tuple[float, float, np.ndarray]:
@@ -367,7 +367,7 @@ def monte_carlo_option_price(
         sigma (float): Volatility.
         num_simulations (int, optional): Number of simulations. Defaults to 10000.
         option_type (str, optional): 'call' or 'put'. Defaults to "call".
-        seed (int, optional): Random seed. Defaults to 42.
+        seed (int, optional): Random seed. Defaults to None (random each call).
         q (float, optional): Dividend yield. Defaults to 0.0.
         borrow_cost (float, optional): Cost to borrow. Defaults to 0.0.
 

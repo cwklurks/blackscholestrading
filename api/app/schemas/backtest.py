@@ -28,7 +28,7 @@ class PayoffRequest(BaseModel):
     spot_range: SpotRange
     S: float = Field(gt=0, description="Current spot for entry pricing")
     T: float = Field(ge=0, default=0.0833, description="Time to expiry for entry pricing")
-    r: float = Field(default=0.05)
+    r: float = Field(default=0.05, ge=-0.5, le=2.0)
     sigma: float = Field(ge=0, default=0.2)
 
 
@@ -57,7 +57,7 @@ class BacktestLeg(BaseModel):
 class BacktestRequest(BaseModel):
     ticker: str = Field(min_length=1, max_length=10, pattern=r"^[A-Za-z0-9.\-\^]+$")
     legs: list[BacktestLeg] = Field(min_length=1)
-    r: float = Field(default=0.05)
+    r: float = Field(default=0.05, ge=-0.5, le=2.0)
     sigma: float = Field(ge=0, default=0.2)
 
 
