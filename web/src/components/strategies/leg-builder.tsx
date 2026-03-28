@@ -56,21 +56,12 @@ export function LegBuilder({ legs, onChange }: LegBuilderProps) {
 
       {legs.length > 0 && (
         <div className="space-y-2">
-          {/* Column headers */}
-          <div className="hidden grid-cols-[1fr_1fr_80px_80px_32px] items-center gap-2 text-xs text-muted-foreground sm:grid">
-            <span>Side</span>
-            <span>Type</span>
-            <span>Strike</span>
-            <span>Qty</span>
-            <span />
-          </div>
-
           {legs.map((leg, idx) => (
             <div
               key={idx}
-              className="grid grid-cols-2 items-center gap-2 rounded-md border border-border bg-background p-2 sm:grid-cols-[1fr_1fr_80px_80px_32px] sm:p-0 sm:border-0 sm:bg-transparent"
+              className="grid grid-cols-[1fr_1fr_auto] gap-2 rounded-md border border-border bg-background p-2"
             >
-              {/* Side */}
+              {/* Row 1: Side, Type, Delete */}
               <select
                 value={leg.side}
                 onChange={(e) =>
@@ -84,7 +75,6 @@ export function LegBuilder({ legs, onChange }: LegBuilderProps) {
                 <option value="short">Short</option>
               </select>
 
-              {/* Type */}
               <select
                 value={leg.type}
                 onChange={(e) =>
@@ -98,40 +88,6 @@ export function LegBuilder({ legs, onChange }: LegBuilderProps) {
                 <option value="put">Put</option>
               </select>
 
-              {/* Strike */}
-              <input
-                type="number"
-                value={leg.strike}
-                step={1}
-                min={0.01}
-                onChange={(e) => {
-                  const parsed = parseFloat(e.target.value);
-                  if (!Number.isNaN(parsed)) {
-                    handleUpdate(idx, { strike: parsed });
-                  }
-                }}
-                className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
-                placeholder="Strike"
-              />
-
-              {/* Qty */}
-              <input
-                type="number"
-                value={leg.qty ?? 1}
-                step={1}
-                min={1}
-                max={100}
-                onChange={(e) => {
-                  const parsed = parseInt(e.target.value, 10);
-                  if (!Number.isNaN(parsed) && parsed >= 1) {
-                    handleUpdate(idx, { qty: parsed });
-                  }
-                }}
-                className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
-                placeholder="Qty"
-              />
-
-              {/* Remove */}
               <button
                 type="button"
                 onClick={() => handleRemove(idx)}
@@ -140,6 +96,40 @@ export function LegBuilder({ legs, onChange }: LegBuilderProps) {
               >
                 <Trash2Icon className="size-4" />
               </button>
+
+              {/* Row 2: Strike, Qty */}
+              <div className="col-span-2 grid grid-cols-2 gap-2">
+                <input
+                  type="number"
+                  value={leg.strike}
+                  step={1}
+                  min={0.01}
+                  onChange={(e) => {
+                    const parsed = parseFloat(e.target.value);
+                    if (!Number.isNaN(parsed)) {
+                      handleUpdate(idx, { strike: parsed });
+                    }
+                  }}
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
+                  placeholder="Strike"
+                />
+
+                <input
+                  type="number"
+                  value={leg.qty ?? 1}
+                  step={1}
+                  min={1}
+                  max={100}
+                  onChange={(e) => {
+                    const parsed = parseInt(e.target.value, 10);
+                    if (!Number.isNaN(parsed) && parsed >= 1) {
+                      handleUpdate(idx, { qty: parsed });
+                    }
+                  }}
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
+                  placeholder="Qty"
+                />
+              </div>
             </div>
           ))}
         </div>

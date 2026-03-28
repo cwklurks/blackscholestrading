@@ -42,3 +42,4 @@ build/
 # Local environment
 .env
 .env.local
+.gstack/
