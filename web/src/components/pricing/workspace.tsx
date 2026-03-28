@@ -46,8 +46,8 @@ export function Workspace() {
             },
           ],
           spot_range: {
-            min: form.S * 0.7,
-            max: form.S * 1.3,
+            min: form.S * 0.5,
+            max: form.S * 1.5,
           },
           S: form.S,
           T: form.T,
@@ -74,7 +74,7 @@ export function Workspace() {
   return (
     <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
       {/* Left rail - parameter inputs */}
-      <aside className="rounded-[var(--radius)] bg-surface p-4">
+      <aside className="border-r border-border bg-surface p-4 lg:pr-6">
         <ParamRail
           values={form}
           onChange={setForm}
@@ -87,7 +87,7 @@ export function Workspace() {
       <div className="flex flex-col gap-4">
         {/* Error display */}
         {error && (
-          <div className="rounded-lg border border-negative/30 bg-negative/10 px-4 py-3 text-sm text-negative">
+          <div className="rounded-[var(--radius)] border border-negative/30 bg-negative/10 px-4 py-3 text-sm text-negative">
             {error}
           </div>
         )}

@@ -189,7 +189,7 @@ export default function PricingPage() {
         {/* ---------------------------------------------------------------- */}
         {/* Left rail - Parameters                                           */}
         {/* ---------------------------------------------------------------- */}
-        <aside className="w-full shrink-0 space-y-4 rounded-[var(--radius)] bg-surface p-4 lg:w-72">
+        <aside className="w-full shrink-0 space-y-4 border-r border-border bg-surface p-4 lg:w-72 lg:pr-6">
           {/* Model selector */}
           <div className="space-y-1.5">
             <label className="mb-1.5 block text-xs font-medium text-muted-foreground">

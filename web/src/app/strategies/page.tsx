@@ -128,7 +128,7 @@ export default function StrategiesPage() {
         {/* ---------------------------------------------------------------- */}
         {/* Left rail - Leg Builder + Parameters                             */}
         {/* ---------------------------------------------------------------- */}
-        <aside className="w-full shrink-0 space-y-4 rounded-[var(--radius)] bg-surface p-4 lg:w-80">
+        <aside className="w-full shrink-0 space-y-4 border-r border-border bg-surface p-4 lg:w-80 lg:pr-6">
           {/* Leg Builder */}
           <LegBuilder legs={legs} onChange={handleLegsChange} />
 

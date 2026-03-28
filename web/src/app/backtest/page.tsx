@@ -99,7 +99,7 @@ export default function BacktestPage() {
         {/* -------------------------------------------------------------- */}
         {/* Left rail - Config                                              */}
         {/* -------------------------------------------------------------- */}
-        <aside className="w-full shrink-0 space-y-4 rounded-[var(--radius)] bg-surface p-4 lg:w-80">
+        <aside className="w-full shrink-0 space-y-4 border-r border-border bg-surface p-4 lg:w-80 lg:pr-6">
           {/* Ticker */}
           <div className="space-y-1.5">
             <span className="mb-3 block text-sm font-medium text-foreground">
