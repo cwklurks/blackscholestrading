@@ -166,29 +166,6 @@ def fetch_options_chain(ticker: str, force_refresh: bool = False) -> Tuple[Optio
     return opts, exps, fetched_at
 
 
-def parse_uploaded_prices(upload) -> Optional[pd.Series]:
-    """Parse a CSV upload into a price series.
-    
-    Args:
-        upload: Streamlit file upload object
-        
-    Returns:
-        Pandas Series with datetime index and price values, or None on failure
-    """
-    if upload is None:
-        return None
-    try:
-        df = pd.read_csv(upload)
-        date_col = [c for c in df.columns if 'date' in c.lower()]
-        price_col = [c for c in df.columns if c.lower() in {'close', 'price'}]
-        if not date_col or not price_col:
-            return None
-        series = pd.Series(df[price_col[0]].values, index=pd.to_datetime(df[date_col[0]]))
-        series = series.sort_index()
-        return series
-    except Exception:
-        return None
-
 def clear_cache():
     """Clear the data cache."""
     if CACHE_DIR.exists():

@@ -1,23 +1,12 @@
 """
 Strategies package for Black-Scholes Trader.
 
-This package contains trading strategy implementations and backtesting utilities:
-- backtest: Historical strategy replay and P&L tracking
-- Strategy: Abstract base class for custom strategy implementations
+This package contains trading strategy implementations:
+- multi_leg: Multi-leg option strategy payoff computation
 """
 
-from strategies.backtest import (
-    Strategy,
-    SingleOptionStrategy,
-    backtest_option_strategy,
-    generate_gbm_replay,
-)
+from strategies.multi_leg import MultiLegStrategy
 
 __all__ = [
-    "Strategy",
-    "SingleOptionStrategy",
-    "backtest_option_strategy",
-    "generate_gbm_replay",
+    "MultiLegStrategy",
 ]
-
-
