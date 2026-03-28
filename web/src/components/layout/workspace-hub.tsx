@@ -42,7 +42,7 @@ export function WorkspaceHub() {
   return (
     <div className="flex h-full flex-col">
       <ToolBar activeToolId={activeTool} onToolChange={setActiveTool} />
-      <div className="flex-1 pt-4">
+      <div className="flex-1 pt-6">
         <Suspense fallback={<PanelSkeleton />}>
           {ActivePanel && <ActivePanel />}
         </Suspense>
