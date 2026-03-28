@@ -47,10 +47,10 @@ export function Sidebar() {
               key={href}
               href={href}
               className={[
-                "group flex items-center gap-3 rounded-[var(--radius)] px-2.5 py-2 text-sm font-medium transition-colors",
+                "group flex h-10 items-center gap-3 rounded-[var(--radius)] px-2.5 text-sm font-medium transition-colors duration-100",
                 isActive
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:bg-accent/10 hover:text-foreground",
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:bg-foreground/5 hover:text-foreground",
               ].join(" ")}
             >
               <Icon className="h-4 w-4 shrink-0" />
