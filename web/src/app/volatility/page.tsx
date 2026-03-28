@@ -11,17 +11,18 @@ import type { VolSurfacePoint } from "@/lib/types";
 // Constants
 // ---------------------------------------------------------------------------
 
+/** Smile colors derived from design system Greek tokens + warm neutrals */
 const SMILE_COLORS = [
-  "hsl(210, 100%, 60%)",
-  "hsl(150, 80%, 50%)",
-  "hsl(45, 100%, 55%)",
-  "hsl(0, 85%, 60%)",
-  "hsl(280, 80%, 65%)",
-  "hsl(180, 70%, 50%)",
-  "hsl(30, 95%, 55%)",
-  "hsl(330, 80%, 60%)",
-  "hsl(120, 60%, 50%)",
-  "hsl(60, 90%, 50%)",
+  "#5B8DEF", // delta blue
+  "#45B899", // gamma teal
+  "#D4A017", // vega amber (accent)
+  "#E05252", // theta red
+  "#9B8EC4", // rho purple
+  "#6BA3D6", // lighter blue
+  "#5CCFAE", // lighter teal
+  "#E8B84D", // lighter amber
+  "#E87C7C", // lighter red
+  "#B5A8D8", // lighter purple
 ];
 
 // ---------------------------------------------------------------------------

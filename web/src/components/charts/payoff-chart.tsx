@@ -2,9 +2,10 @@
 
 import { BaseChart } from "./base-chart";
 
-const POSITIVE = "hsl(142 70% 45%)";
-const NEGATIVE = "hsl(0 72% 51%)";
-const ACCENT = "#3b82f6";
+/** Design system tokens (DESIGN.md dark mode values) */
+const POSITIVE = "#4CAF7D";
+const NEGATIVE = "#E05252";
+const ACCENT = "#D4A017";
 
 export interface PayoffChartProps {
   prices: number[];
