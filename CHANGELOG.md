@@ -2,6 +2,41 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2.0] - 2026-03-28
+
+### Added
+- Shared TickerContext (React Context + useReducer) for cross-panel market data flow
+- Auto-compute pricing for BS and Binomial models with 300ms debounce and AbortController
+- Command palette (Ctrl+K) via cmdk for tab switching, ticker loading, keyboard navigation
+- CSV export utility (downloadCSV) for client-side data export
+- WorkspaceContext for command palette integration with tab switcher
+- formatPercent and formatCurrency utilities in lib/format.ts
+- Plotly type declaration for plotly.js-dist-min
+
+### Changed
+- Market page writes ticker, spot, and historicalVol to shared context on load
+- ParamRail auto-populates spot, strike (ATM), and sigma from context
+- All panel wrappers import Content components directly (removed brittle CSS hack)
+- Strategies page auto-recomputes payoff with 300ms debounce on leg changes
+- Market expiry filter now actually filters the chain table by selected expiration
+- Consolidated model-param-panel and advanced-params inputs to ParamInput component
+- Replaced inline formatPercent in backtest and market pages with shared utility
+- Backend routers use run_in_threadpool for all 8 handlers (pricing, market, backtest)
+- Switched to plotly.js-dist-min for smaller bundle size
+
+### Fixed
+- Model name mismatch: frontend sent "Binomial" but backend expected "Binomial (American)"
+- Heston params (kappa, theta, rho, vol_of_vol) sent without heston_ prefix, silently dropped by schema
+- GARCH params (alpha0, alpha1, beta1) sent without garch_ prefix, silently dropped by schema
+- Market expiration dropdown was cosmetic (rendered but had no filtering effect)
+- Strategies debounceRef was allocated but setTimeout never called (dead code)
+
+### Removed
+- sidebar.tsx (unused since tabbed workspace replaced sidebar nav)
+- use-pricing.ts hook (never imported, pages call api.price directly)
+- strategies/backtest.py (parallel implementation only used in one legacy test)
+- parse_uploaded_prices in data_service.py (Streamlit legacy, never called)
+
 ## [1.0.1.0] - 2026-03-27
 
 ### Added
