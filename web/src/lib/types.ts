@@ -125,6 +125,7 @@ export interface ChainRow {
   iv: number | null
   volume: number | null
   oi: number | null
+  expiration: string | null
 }
 
 export interface ChainResponse {

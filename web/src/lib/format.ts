@@ -25,3 +25,11 @@ export function formatPnl(value: number): string {
   const abs = Math.abs(value).toFixed(2);
   return value > 0 ? `+$${abs}` : `-$${abs}`;
 }
+
+export function formatPercent(value: number): string {
+  return `${(value * 100).toFixed(1)}%`;
+}
+
+export function formatCurrency(value: number): string {
+  return `$${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
