@@ -236,7 +236,7 @@ export default function StrategiesPage() {
                     <div className="text-xs text-muted-foreground">
                       Breakevens
                     </div>
-                    <div className="mt-1 text-sm font-semibold tabular-nums text-foreground">
+                    <div className="mt-1 font-mono text-sm font-semibold tabular-nums text-foreground">
                       {payoff.breakevens.length > 0
                         ? payoff.breakevens
                             .map((b) => `$${b.toFixed(2)}`)
@@ -327,7 +327,7 @@ function StatCard({
   return (
     <div className="space-y-1">
       <div className="text-xs text-muted-foreground">{label}</div>
-      <div className={`mt-1 text-lg font-semibold tabular-nums ${colorClass}`}>
+      <div className={`mt-1 font-mono text-lg font-semibold tabular-nums ${colorClass}`}>
         {displayValue}
       </div>
     </div>
