@@ -37,11 +37,11 @@ export function GreeksRow({ data, className }: GreeksRowProps) {
 
         return (
           <div key={key}>
-            <div className={`text-xs font-medium uppercase tracking-wider ${colorClass}`}>
+            <div className={`text-[11px] font-medium uppercase tracking-widest ${colorClass}`}>
               {label}
             </div>
             {value !== null && value !== undefined ? (
-              <div className={`font-mono text-base font-medium tabular-nums ${colorClass}`}>
+              <div className={`font-mono text-lg font-semibold tabular-nums ${colorClass}`}>
                 {formatGreek(key, value)}
               </div>
             ) : (

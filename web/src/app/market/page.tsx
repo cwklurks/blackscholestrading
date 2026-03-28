@@ -82,10 +82,10 @@ function StatCard({
 }) {
   return (
     <div
-      className={`rounded-lg border border-border bg-card p-4 ${className ?? ""}`}
+      className={`rounded-[var(--radius)] border border-border bg-card p-4 ${className ?? ""}`}
     >
       <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="mt-1 text-xl font-semibold tabular-nums text-foreground">
+      <div className="mt-1 font-mono text-xl font-semibold tabular-nums text-foreground">
         {value}
       </div>
     </div>
@@ -136,19 +136,19 @@ function ChainTable({ rows }: { rows: ChainRow[] }) {
               key={row.strike}
               className="border-b border-border/50 transition-colors hover:bg-muted/30"
             >
-              <td className="px-3 py-2 text-right font-medium tabular-nums text-foreground">
+              <td className="px-3 py-2 text-right font-mono font-medium tabular-nums text-foreground">
                 {formatNumber(row.strike)}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums text-foreground">
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-foreground">
                 {formatNumber(row.lastPrice)}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums text-foreground">
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-foreground">
                 {formatPercent(row.iv)}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
                 {formatVolume(row.volume)}
               </td>
-              <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+              <td className="px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
                 {formatVolume(row.oi)}
               </td>
             </tr>

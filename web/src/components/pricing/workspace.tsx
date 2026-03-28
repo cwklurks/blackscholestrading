@@ -46,8 +46,8 @@ export function Workspace() {
             },
           ],
           spot_range: {
-            min: form.S * 0.7,
-            max: form.S * 1.3,
+            min: form.S * 0.5,
+            max: form.S * 1.5,
           },
           S: form.S,
           T: form.T,
@@ -72,9 +72,9 @@ export function Workspace() {
   }, [form]);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+    <div className="grid gap-8 lg:grid-cols-[300px_1fr]">
       {/* Left rail - parameter inputs */}
-      <aside className="rounded-[var(--radius)] bg-surface p-4">
+      <aside className="border-r border-border bg-surface p-4 lg:pr-6">
         <ParamRail
           values={form}
           onChange={setForm}
@@ -87,7 +87,7 @@ export function Workspace() {
       <div className="flex flex-col gap-4">
         {/* Error display */}
         {error && (
-          <div className="rounded-lg border border-negative/30 bg-negative/10 px-4 py-3 text-sm text-negative">
+          <div className="rounded-[var(--radius)] border border-negative/30 bg-negative/10 px-4 py-3 text-sm text-negative">
             {error}
           </div>
         )}
@@ -97,7 +97,7 @@ export function Workspace() {
           <div className="border-b border-border pb-4">
             <div className="flex items-baseline justify-between">
               <span className="text-sm text-muted-foreground">{pricingResult.model}</span>
-              <div className="font-mono text-4xl font-bold tabular-nums">
+              <div className="font-mono text-5xl font-bold tabular-nums tracking-tight">
                 {formatPrice(pricingResult.price)}
               </div>
             </div>
@@ -138,12 +138,12 @@ export function Workspace() {
 
         {/* Empty state */}
         {!pricingResult && !isPricing && !error && (
-          <div className="flex min-h-[300px] items-center justify-center">
+          <div className="flex min-h-[400px] items-center justify-center">
             <div className="text-center">
-              <p className="font-mono text-3xl font-bold tabular-nums text-muted-foreground/30">
+              <p className="font-mono text-5xl font-bold tabular-nums tracking-tight text-muted-foreground/20">
                 $0.00
               </p>
-              <p className="mt-3 text-sm text-muted-foreground">
+              <p className="mt-4 text-sm text-muted-foreground">
                 Price an AAPL call to get started
               </p>
             </div>
