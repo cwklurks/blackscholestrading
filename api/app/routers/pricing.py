@@ -1,11 +1,6 @@
-"""Pricing API endpoints.
-
-TODO: All route handlers are async but call sync CPU-bound services (MC sims,
-numerical Greeks, IV solves) directly on the event loop. For single-user/portfolio
-use this is fine. For production concurrency, wrap service calls in
-`asyncio.get_event_loop().run_in_executor(None, ...)` or use `run_in_threadpool`.
-"""
+"""Pricing API endpoints."""
 from fastapi import APIRouter
+from starlette.concurrency import run_in_threadpool
 
 from api.app.schemas.pricing import (
     PricingRequest, PricingResponse,
@@ -21,35 +16,35 @@ router = APIRouter(tags=["pricing"])
 
 @router.post("/price", response_model=PricingResponse)
 async def price_option(request: PricingRequest):
-    result = compute_price(model_name=request.model, **request.to_engine_kwargs())
+    result = await run_in_threadpool(lambda: compute_price(model_name=request.model, **request.to_engine_kwargs()))
     return result
 
 
 @router.post("/heatmap", response_model=HeatmapResponse)
 async def compute_heatmap_endpoint(request: HeatmapRequest):
-    result = compute_heatmap(
+    result = await run_in_threadpool(lambda: compute_heatmap(
         K=request.K, T=request.T, r=request.r, q=request.q,
         borrow_cost=request.borrow_cost,
         spot_range=request.spot_range.model_dump(),
         vol_range=request.vol_range.model_dump(),
-    )
+    ))
     return result
 
 
 @router.post("/monte-carlo", response_model=MonteCarloResponse)
 async def monte_carlo(request: MonteCarloRequest):
-    result = compute_monte_carlo(
+    result = await run_in_threadpool(lambda: compute_monte_carlo(
         S=request.S, K=request.K, T=request.T, r=request.r,
         sigma=request.sigma, paths=request.paths,
         option_type=request.option_type, q=request.q,
         borrow_cost=request.borrow_cost,
-    )
+    ))
     return result
 
 
 @router.post("/volatility-surface", response_model=VolSurfaceResponse)
 async def volatility_surface(request: VolSurfaceRequest):
-    result = compute_volatility_surface(
+    result = await run_in_threadpool(lambda: compute_volatility_surface(
         request.ticker, request.strikes, request.expirations, request.r,
-    )
+    ))
     return result
