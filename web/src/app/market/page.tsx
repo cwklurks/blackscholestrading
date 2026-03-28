@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMarket, useChain } from "@/hooks/use-market";
+import { useTickerDispatch } from "@/contexts/ticker-context";
 import { CandlestickChart } from "@/components/charts/candlestick-chart";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { formatPercent } from "@/lib/format";
 import type { ChainRow, OHLCVRow } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -30,9 +32,9 @@ function formatNumber(value: number | null, decimals = 2): string {
   });
 }
 
-function formatPercent(value: number | null): string {
+function formatPercentOrDash(value: number | null): string {
   if (value === null || value === undefined) return "-";
-  return `${(value * 100).toFixed(1)}%`;
+  return formatPercent(value);
 }
 
 function formatVolume(value: number | null): string {
@@ -143,7 +145,7 @@ function ChainTable({ rows }: { rows: ChainRow[] }) {
                 {formatNumber(row.lastPrice)}
               </td>
               <td className="px-3 py-2 text-right font-mono tabular-nums text-foreground">
-                {formatPercent(row.iv)}
+                {formatPercentOrDash(row.iv)}
               </td>
               <td className="px-3 py-2 text-right font-mono tabular-nums text-muted-foreground">
                 {formatVolume(row.volume)}
@@ -160,10 +162,11 @@ function ChainTable({ rows }: { rows: ChainRow[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Page
+// Content (exported for panel.tsx to use directly)
 // ---------------------------------------------------------------------------
 
-export default function MarketPage() {
+export function MarketContent() {
+  const dispatch = useTickerDispatch();
   const [tickerInput, setTickerInput] = useState("AAPL");
   const [activeTicker, setActiveTicker] = useState<string | null>(null);
   const [selectedExpiry, setSelectedExpiry] = useState<string | null>(null);
@@ -185,15 +188,34 @@ export default function MarketPage() {
   const isLoading = marketLoading || chainLoading;
   const error = marketError ?? chainError;
 
+  // Dispatch market data to context when it arrives
+  useEffect(() => {
+    if (marketData && activeTicker) {
+      dispatch({
+        type: "SET_MARKET_DATA",
+        ticker: activeTicker,
+        spot: marketData.price,
+        historicalVol: marketData.historical_vol,
+      });
+    }
+  }, [marketData, activeTicker, dispatch]);
+
   // When chain data arrives, auto-select the first expiration if none set
   const expirations = chainData?.expirations ?? [];
   const activeExpiry = selectedExpiry ?? expirations[0] ?? null;
 
   // Filter chain rows by the selected expiration
-  // Note: If the API returns the full chain (not filtered), we show all rows.
-  // The expiration selector is for UX context; the API may already filter.
-  const filteredCalls = useMemo(() => chainData?.calls ?? [], [chainData?.calls]);
-  const filteredPuts = useMemo(() => chainData?.puts ?? [], [chainData?.puts]);
+  const filteredCalls = useMemo(() => {
+    const rows = chainData?.calls ?? [];
+    if (!activeExpiry || activeExpiry === "all") return rows;
+    return rows.filter((r) => r.expiration === activeExpiry);
+  }, [chainData?.calls, activeExpiry]);
+
+  const filteredPuts = useMemo(() => {
+    const rows = chainData?.puts ?? [];
+    if (!activeExpiry || activeExpiry === "all") return rows;
+    return rows.filter((r) => r.expiration === activeExpiry);
+  }, [chainData?.puts, activeExpiry]);
 
   // Extract OHLCV arrays from market history
   const ohlcv = useMemo(() => {
@@ -219,11 +241,6 @@ export default function MarketPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Market</h1>
-      </div>
-
       {/* Ticker Input + Load */}
       <div className="flex items-center gap-3">
         <input
@@ -322,10 +339,11 @@ export default function MarketPage() {
                       Expiration
                     </label>
                     <select
-                      value={activeExpiry ?? ""}
+                      value={activeExpiry ?? "all"}
                       onChange={(e) => setSelectedExpiry(e.target.value)}
                       className="h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
                     >
+                      <option value="all">All Expirations</option>
                       {expirations.map((exp) => (
                         <option key={exp} value={exp}>
                           {exp}
@@ -363,6 +381,21 @@ export default function MarketPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page (thin wrapper with header for standalone route)
+// ---------------------------------------------------------------------------
+
+export default function MarketPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Market</h1>
+      </div>
+      <MarketContent />
     </div>
   );
 }

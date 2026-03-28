@@ -183,7 +183,7 @@ function ErrorMessage({ message }: { message: string }) {
 // Page
 // ---------------------------------------------------------------------------
 
-export default function VolatilityPage() {
+export function VolatilityContent() {
   const [ticker, setTicker] = useState("AAPL");
   const { trigger, data, error, isMutating } = useVolSurface();
 
@@ -209,11 +209,6 @@ export default function VolatilityPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Volatility</h1>
-      </div>
-
       {/* Ticker Input + Fetch */}
       <div className="flex items-center gap-3">
         <input
@@ -261,6 +256,21 @@ export default function VolatilityPage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page (thin wrapper with header for standalone route)
+// ---------------------------------------------------------------------------
+
+export default function VolatilityPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Volatility</h1>
+      </div>
+      <VolatilityContent />
     </div>
   );
 }
