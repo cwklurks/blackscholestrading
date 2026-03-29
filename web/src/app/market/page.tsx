@@ -135,7 +135,7 @@ function ChainTable({ rows }: { rows: ChainRow[] }) {
         <tbody>
           {rows.map((row) => (
             <tr
-              key={row.strike}
+              key={`${row.strike}-${row.expiration ?? "unknown"}`}
               className="border-b border-border/50 transition-colors hover:bg-muted/30"
             >
               <td className="px-3 py-2 text-right font-mono font-medium tabular-nums text-foreground">

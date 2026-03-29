@@ -88,8 +88,8 @@ export function ParamRail({
     (field: keyof Pick<ParamRailFormValues, "S" | "K" | "T" | "r" | "sigma">, raw: string) => {
       const parsed = parseFloat(raw);
       if (!Number.isNaN(parsed)) {
-        // Mark as manually edited if user changes spot or sigma
-        if (field === "S" || field === "sigma") {
+        // Mark as manually edited if user changes spot, strike, or sigma
+        if (field === "S" || field === "K" || field === "sigma") {
           hasManuallyEdited.current = true;
         }
         updateField(field, parsed);

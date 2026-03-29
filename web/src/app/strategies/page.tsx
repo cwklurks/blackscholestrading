@@ -62,6 +62,7 @@ export function StrategiesContent() {
 
   // Debounce ref for auto-calculate
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestVersionRef = useRef(0);
 
   // Template name detection
   const activeName = detectTemplateName(legs);
@@ -88,6 +89,7 @@ export function StrategiesContent() {
       return;
     }
 
+    const version = ++requestVersionRef.current;
     setLoading(true);
     setError(null);
 
@@ -100,13 +102,18 @@ export function StrategiesContent() {
         r: rate,
         sigma,
       });
+      // Discard stale results if a newer request was fired
+      if (requestVersionRef.current !== version) return;
       setPayoff(result);
     } catch (err) {
+      if (requestVersionRef.current !== version) return;
       const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       setPayoff(null);
     } finally {
-      setLoading(false);
+      if (requestVersionRef.current === version) {
+        setLoading(false);
+      }
     }
   }, [legs, rangeMin, rangeMax, spot, tte, rate, sigma]);
 
