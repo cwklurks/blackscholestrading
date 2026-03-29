@@ -139,7 +139,7 @@ export function Workspace() {
       {/* Right canvas - results */}
       <div className="flex flex-col gap-4">
         {/* Auto-compute indicator */}
-        {isAutoCompute && isPricing && pricingResult && (
+        {isAutoCompute && isPricing && (
           <p className="text-xs text-muted-foreground">computing...</p>
         )}
 

@@ -73,6 +73,10 @@ export function ParamRail({
   // Context sync: read shared ticker/spot/vol from market page
   const tickerCtx = useTickerState();
   const hasManuallyEdited = useRef(false);
+  const valuesRef = useRef(values);
+  const onChangeRef = useRef(onChange);
+  valuesRef.current = values;
+  onChangeRef.current = onChange;
 
   const updateField = useCallback(
     <K extends keyof ParamRailFormValues>(
@@ -115,26 +119,28 @@ export function ParamRail({
   }, [tickerCtx.ticker]);
 
   // Sync context values into form when market data arrives
+  // Uses refs to read latest values/onChange without adding them as reactive deps
   useEffect(() => {
     if (hasManuallyEdited.current) return;
     if (tickerCtx.ticker === null) return;
 
+    const current = valuesRef.current;
     const updates: Partial<ParamRailFormValues> = {};
-    if (tickerCtx.ticker && tickerCtx.ticker !== values.ticker) {
+    if (tickerCtx.ticker && tickerCtx.ticker !== current.ticker) {
       updates.ticker = tickerCtx.ticker;
     }
-    if (tickerCtx.spot !== null && tickerCtx.spot !== values.S) {
+    if (tickerCtx.spot !== null && tickerCtx.spot !== current.S) {
       updates.S = tickerCtx.spot;
       updates.K = tickerCtx.spot; // default strike to ATM
     }
-    if (tickerCtx.historicalVol !== null && tickerCtx.historicalVol !== values.sigma) {
+    if (tickerCtx.historicalVol !== null && tickerCtx.historicalVol !== current.sigma) {
       updates.sigma = tickerCtx.historicalVol;
     }
 
     if (Object.keys(updates).length > 0) {
-      onChange({ ...values, ...updates });
+      onChangeRef.current({ ...current, ...updates });
     }
-  }, [tickerCtx.ticker, tickerCtx.spot, tickerCtx.historicalVol]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tickerCtx.ticker, tickerCtx.spot, tickerCtx.historicalVol]);
 
   return (
     <div className="flex flex-col gap-4">
