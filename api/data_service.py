@@ -12,8 +12,9 @@ from data.provider import MarketDataProvider
 from data.yahoo_provider import YahooProvider
 from data.mock_provider import MockProvider
 
-# Configuration
-CACHE_DIR = Path(".cache")
+# Configuration — use /tmp on Vercel (read-only filesystem), .cache/ locally
+import os
+CACHE_DIR = Path(os.environ.get("CACHE_DIR", "/tmp/.bst-cache" if os.environ.get("VERCEL") else ".cache"))
 CACHE_EXPIRY = timedelta(hours=1) # Cache validity duration
 USE_MOCK = False # Toggle to True to use MockProvider
 
