@@ -2,8 +2,12 @@
 from fastapi import APIRouter, Path
 from starlette.concurrency import run_in_threadpool
 
-from api.app.schemas.market import MarketResponse, ChainResponse
-from api.app.services.market_service import get_market_data, get_options_chain
+try:
+    from api.app.schemas.market import MarketResponse, ChainResponse
+    from api.app.services.market_service import get_market_data, get_options_chain
+except ImportError:
+    from app.schemas.market import MarketResponse, ChainResponse
+    from app.services.market_service import get_market_data, get_options_chain
 
 router = APIRouter(tags=["market"])
 

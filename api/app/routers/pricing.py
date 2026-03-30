@@ -2,14 +2,24 @@
 from fastapi import APIRouter
 from starlette.concurrency import run_in_threadpool
 
-from api.app.schemas.pricing import (
-    PricingRequest, PricingResponse,
-    HeatmapRequest, HeatmapResponse,
-    MonteCarloRequest, MonteCarloResponse,
-    VolSurfaceRequest, VolSurfaceResponse,
-)
-from api.app.services.pricing_service import compute_price, compute_heatmap, compute_monte_carlo
-from api.app.services.volatility_service import compute_volatility_surface
+try:
+    from api.app.schemas.pricing import (
+        PricingRequest, PricingResponse,
+        HeatmapRequest, HeatmapResponse,
+        MonteCarloRequest, MonteCarloResponse,
+        VolSurfaceRequest, VolSurfaceResponse,
+    )
+    from api.app.services.pricing_service import compute_price, compute_heatmap, compute_monte_carlo
+    from api.app.services.volatility_service import compute_volatility_surface
+except ImportError:
+    from app.schemas.pricing import (
+        PricingRequest, PricingResponse,
+        HeatmapRequest, HeatmapResponse,
+        MonteCarloRequest, MonteCarloResponse,
+        VolSurfaceRequest, VolSurfaceResponse,
+    )
+    from app.services.pricing_service import compute_price, compute_heatmap, compute_monte_carlo
+    from app.services.volatility_service import compute_volatility_surface
 
 router = APIRouter(tags=["pricing"])
 

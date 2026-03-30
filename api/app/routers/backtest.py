@@ -2,11 +2,18 @@
 from fastapi import APIRouter
 from starlette.concurrency import run_in_threadpool
 
-from api.app.schemas.backtest import (
-    PayoffRequest, PayoffResponse,
-    BacktestRequest, BacktestResponse,
-)
-from api.app.services.backtest_service import compute_payoff, run_backtest
+try:
+    from api.app.schemas.backtest import (
+        PayoffRequest, PayoffResponse,
+        BacktestRequest, BacktestResponse,
+    )
+    from api.app.services.backtest_service import compute_payoff, run_backtest
+except ImportError:
+    from app.schemas.backtest import (
+        PayoffRequest, PayoffResponse,
+        BacktestRequest, BacktestResponse,
+    )
+    from app.services.backtest_service import compute_payoff, run_backtest
 
 router = APIRouter(tags=["backtest"])
 

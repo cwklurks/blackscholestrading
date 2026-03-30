@@ -15,7 +15,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from api.app.routers import pricing, market, backtest
+try:
+    from api.app.routers import pricing, market, backtest
+except ImportError:
+    from app.routers import pricing, market, backtest
 
 app = FastAPI(
     title="Black-Scholes Pricing Engine",
