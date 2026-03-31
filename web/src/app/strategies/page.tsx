@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { TemplatePicker } from "@/components/strategies/template-picker";
 import { LegBuilder } from "@/components/strategies/leg-builder";
@@ -39,7 +39,7 @@ function detectTemplateName(legs: StrategyLeg[]): string | undefined {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function StrategiesPage() {
+export function StrategiesContent() {
   // Legs state
   const [legs, setLegs] = useState<StrategyLeg[]>([]);
 
@@ -62,6 +62,7 @@ export default function StrategiesPage() {
 
   // Debounce ref for auto-calculate
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestVersionRef = useRef(0);
 
   // Template name detection
   const activeName = detectTemplateName(legs);
@@ -88,10 +89,7 @@ export default function StrategiesPage() {
       return;
     }
 
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
+    const version = ++requestVersionRef.current;
     setLoading(true);
     setError(null);
 
@@ -104,23 +102,42 @@ export default function StrategiesPage() {
         r: rate,
         sigma,
       });
+      // Discard stale results if a newer request was fired
+      if (requestVersionRef.current !== version) return;
       setPayoff(result);
     } catch (err) {
+      if (requestVersionRef.current !== version) return;
       const message = err instanceof Error ? err.message : "An error occurred";
       setError(message);
       setPayoff(null);
     } finally {
-      setLoading(false);
+      if (requestVersionRef.current === version) {
+        setLoading(false);
+      }
     }
   }, [legs, rangeMin, rangeMax, spot, tte, rate, sigma]);
 
+  // Auto-recompute payoff on parameter changes (debounced 300ms)
+  useEffect(() => {
+    if (legs.length === 0) return;
+
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+
+    debounceRef.current = setTimeout(() => {
+      handleCalculate();
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [handleCalculate]);
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Strategies</h1>
-      </div>
-
       {/* Template Picker */}
       <TemplatePicker onSelect={handleTemplateSelect} activeName={activeName} />
 
@@ -301,6 +318,21 @@ export default function StrategiesPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page (thin wrapper with header for standalone route)
+// ---------------------------------------------------------------------------
+
+export default function StrategiesPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Strategies</h1>
+      </div>
+      <StrategiesContent />
     </div>
   );
 }

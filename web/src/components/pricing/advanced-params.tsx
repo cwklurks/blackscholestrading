@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { ParamInput } from "@/components/ui/param-input";
 
 export interface AdvancedParamsValues {
   q: number;
@@ -15,12 +16,6 @@ interface AdvancedParamsProps {
 
 export function AdvancedParams({ values, onChange }: AdvancedParamsProps) {
   const [isOpen, setIsOpen] = useState(false);
-
-  function handleChange(field: keyof AdvancedParamsValues, raw: string) {
-    const parsed = parseFloat(raw);
-    if (Number.isNaN(parsed)) return;
-    onChange({ ...values, [field]: parsed });
-  }
 
   return (
     <div className="rounded-lg border border-border bg-card">
@@ -39,35 +34,22 @@ export function AdvancedParams({ values, onChange }: AdvancedParamsProps) {
 
       {isOpen && (
         <div className="space-y-3 border-t border-border px-3 pb-3 pt-3">
-          <div>
-            <label className="mb-1 block text-xs text-muted-foreground">
-              Dividend Yield (q)
-            </label>
-            <input
-              type="number"
-              step="0.005"
-              min="0"
-              max="1"
-              value={values.q}
-              onChange={(e) => handleChange("q", e.target.value)}
-              className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
-            />
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs text-muted-foreground">
-              Borrow Cost
-            </label>
-            <input
-              type="number"
-              step="0.005"
-              min="0"
-              max="1"
-              value={values.borrowCost}
-              onChange={(e) => handleChange("borrowCost", e.target.value)}
-              className="h-8 w-full rounded-md border border-input bg-background px-2.5 text-sm text-foreground outline-none transition-colors focus:border-ring focus:ring-1 focus:ring-ring"
-            />
-          </div>
+          <ParamInput
+            label="Dividend Yield (q)"
+            step={0.005}
+            min={0}
+            max={1}
+            value={values.q}
+            onChange={(v) => onChange({ ...values, q: v })}
+          />
+          <ParamInput
+            label="Borrow Cost"
+            step={0.005}
+            min={0}
+            max={1}
+            value={values.borrowCost}
+            onChange={(v) => onChange({ ...values, borrowCost: v })}
+          />
         </div>
       )}
     </div>

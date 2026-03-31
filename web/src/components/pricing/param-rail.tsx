@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -19,10 +19,11 @@ import {
   AdvancedParams,
   type AdvancedParamsValues,
 } from "@/components/pricing/advanced-params";
+import { useTickerState } from "@/contexts/ticker-context";
 
 const MODELS = [
   "Black-Scholes",
-  "Binomial",
+  "Binomial (American)",
   "Heston MC",
   "GARCH MC",
   "Bates Jump-Diffusion",
@@ -59,6 +60,7 @@ interface ParamRailProps {
   onChange: (values: ParamRailFormValues) => void;
   onPrice: () => void;
   isPricing: boolean;
+  isAutoCompute?: boolean;
 }
 
 export function ParamRail({
@@ -66,7 +68,16 @@ export function ParamRail({
   onChange,
   onPrice,
   isPricing,
+  isAutoCompute = false,
 }: ParamRailProps) {
+  // Context sync: read shared ticker/spot/vol from market page
+  const tickerCtx = useTickerState();
+  const hasManuallyEdited = useRef(false);
+  const valuesRef = useRef(values);
+  const onChangeRef = useRef(onChange);
+  valuesRef.current = values;
+  onChangeRef.current = onChange;
+
   const updateField = useCallback(
     <K extends keyof ParamRailFormValues>(
       field: K,
@@ -81,6 +92,10 @@ export function ParamRail({
     (field: keyof Pick<ParamRailFormValues, "S" | "K" | "T" | "r" | "sigma">, raw: string) => {
       const parsed = parseFloat(raw);
       if (!Number.isNaN(parsed)) {
+        // Mark as manually edited if user changes spot, strike, or sigma
+        if (field === "S" || field === "K" || field === "sigma") {
+          hasManuallyEdited.current = true;
+        }
         updateField(field, parsed);
       }
     },
@@ -97,6 +112,35 @@ export function ParamRail({
     },
     [values, onChange],
   );
+
+  // Reset the manual-edit flag when context ticker changes
+  useEffect(() => {
+    hasManuallyEdited.current = false;
+  }, [tickerCtx.ticker]);
+
+  // Sync context values into form when market data arrives
+  // Uses refs to read latest values/onChange without adding them as reactive deps
+  useEffect(() => {
+    if (hasManuallyEdited.current) return;
+    if (tickerCtx.ticker === null) return;
+
+    const current = valuesRef.current;
+    const updates: Partial<ParamRailFormValues> = {};
+    if (tickerCtx.ticker && tickerCtx.ticker !== current.ticker) {
+      updates.ticker = tickerCtx.ticker;
+    }
+    if (tickerCtx.spot !== null && tickerCtx.spot !== current.S) {
+      updates.S = tickerCtx.spot;
+      updates.K = tickerCtx.spot; // default strike to ATM
+    }
+    if (tickerCtx.historicalVol !== null && tickerCtx.historicalVol !== current.sigma) {
+      updates.sigma = tickerCtx.historicalVol;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      onChangeRef.current({ ...current, ...updates });
+    }
+  }, [tickerCtx.ticker, tickerCtx.spot, tickerCtx.historicalVol]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -228,16 +272,22 @@ export function ParamRail({
         onChange={(adv) => updateField("advanced", adv)}
       />
 
-      {/* Price button */}
-      <Button
-        type="button"
-        size="lg"
-        onClick={onPrice}
-        disabled={isPricing}
-        className="w-full"
-      >
-        {isPricing ? "Pricing..." : "Price"}
-      </Button>
+      {/* Price button: hidden for auto-compute models, shown for MC models */}
+      {isAutoCompute ? (
+        <p className="text-center text-xs text-muted-foreground">
+          Auto-pricing enabled
+        </p>
+      ) : (
+        <Button
+          type="button"
+          size="lg"
+          onClick={onPrice}
+          disabled={isPricing}
+          className="w-full"
+        >
+          {isPricing ? "Pricing..." : "Price"}
+        </Button>
+      )}
     </div>
   );
 }

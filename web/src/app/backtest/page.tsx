@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BaseChart } from "@/components/charts/base-chart";
 import { api } from "@/lib/api";
 import { ParamInput } from "@/components/ui/param-input";
+import { formatPercent, formatPnl } from "@/lib/format";
 import type { BacktestLeg, BacktestResponse } from "@/lib/types";
 
 // ---------------------------------------------------------------------------
@@ -29,7 +30,7 @@ function createDefaultLeg(): BacktestLeg {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function BacktestPage() {
+export function BacktestContent() {
   // Config state
   const [ticker, setTicker] = useState("AAPL");
   const [legs, setLegs] = useState<BacktestLeg[]>([createDefaultLeg()]);
@@ -90,11 +91,6 @@ export default function BacktestPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Backtest</h1>
-      </div>
-
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* -------------------------------------------------------------- */}
         {/* Left rail - Config                                              */}
@@ -210,7 +206,7 @@ export default function BacktestPage() {
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 <MetricCard
                   label="Total P&L"
-                  value={formatCurrency(result.total_pnl)}
+                  value={formatPnl(result.total_pnl)}
                   colorClass={
                     result.total_pnl >= 0
                       ? "text-positive"
@@ -322,6 +318,21 @@ export default function BacktestPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page (thin wrapper with header for standalone route)
+// ---------------------------------------------------------------------------
+
+export default function BacktestPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Backtest</h1>
+      </div>
+      <BacktestContent />
     </div>
   );
 }
@@ -466,15 +477,3 @@ function MetricCard({
   );
 }
 
-// ---------------------------------------------------------------------------
-// Formatting helpers
-// ---------------------------------------------------------------------------
-
-function formatCurrency(value: number): string {
-  const prefix = value >= 0 ? "+$" : "-$";
-  return `${prefix}${Math.abs(value).toFixed(2)}`;
-}
-
-function formatPercent(value: number): string {
-  return `${(value * 100).toFixed(1)}%`;
-}

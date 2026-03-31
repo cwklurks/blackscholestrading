@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AppShell } from "@/components/layout/app-shell";
+import { TickerProvider } from "@/contexts/ticker-context";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} dark h-full antialiased`}>
       <body className="min-h-full font-sans">
-        <AppShell>{children}</AppShell>
+        <TickerProvider>
+          <AppShell>{children}</AppShell>
+        </TickerProvider>
       </body>
     </html>
   );

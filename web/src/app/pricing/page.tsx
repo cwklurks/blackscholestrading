@@ -27,7 +27,7 @@ import type {
 
 const MODELS = [
   "Black-Scholes",
-  "Binomial",
+  "Binomial (American)",
   "Heston MC",
   "GARCH MC",
   "Bates Jump-Diffusion",
@@ -51,7 +51,7 @@ interface SensitivityData {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function PricingPage() {
+export function SensitivityContent() {
   // Basic params
   const [spot, setSpot] = useState(100);
   const [strike, setStrike] = useState(100);
@@ -180,11 +180,6 @@ export default function PricingPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Pricing</h1>
-      </div>
-
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* ---------------------------------------------------------------- */}
         {/* Left rail - Parameters                                           */}
@@ -432,6 +427,21 @@ export default function PricingPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page (thin wrapper with header for standalone route)
+// ---------------------------------------------------------------------------
+
+export default function PricingPage() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Pricing</h1>
+      </div>
+      <SensitivityContent />
     </div>
   );
 }

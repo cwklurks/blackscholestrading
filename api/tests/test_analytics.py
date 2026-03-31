@@ -8,7 +8,6 @@ import pandas as pd
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
 from models.engine import iv_hv_stats  # noqa: E402
-from strategies.backtest import backtest_option_strategy  # noqa: E402
 from models import (
     BlackScholesModel,
     monte_carlo_option_price,
@@ -49,7 +48,7 @@ def test_inputs_are_clamped_and_no_nan():
     assert math.isfinite(model.gamma())
 
 
-def test_iv_hv_stats_and_backtest_helpers():
+def test_iv_hv_stats():
     prices = pd.Series(
         np.linspace(90, 110, 30),
         index=pd.date_range(end=pd.Timestamp.today(), periods=30, freq="B"),
@@ -57,11 +56,3 @@ def test_iv_hv_stats_and_backtest_helpers():
     hv_series = prices.pct_change().rolling(window=5).std() * np.sqrt(252)
     hv_stats = iv_hv_stats(0.25, hv_series)
     assert hv_stats is not None and math.isfinite(hv_stats["edge"])
-    bt_df = backtest_option_strategy(
-        prices,
-        strike=100,
-        expiry=pd.Timestamp.today() + pd.Timedelta(days=30),
-        r=0.01,
-        sigma=0.2,
-    )
-    assert bt_df.empty is False

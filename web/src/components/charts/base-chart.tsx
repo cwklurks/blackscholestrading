@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import type { Config, Data, Layout } from "plotly.js";
+import type { Config, Data, Layout } from "plotly.js-dist-min";
 
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 
